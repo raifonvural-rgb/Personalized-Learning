@@ -4,6 +4,7 @@ from pathlib import Path
 
 from profile_api import profile_api
 from active_student_api import active_student_api
+from learning_session_api import learning_session_api
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ app.config["SECRET_KEY"] = key_file.read_text(encoding="utf-8").strip()
 app.register_blueprint(visual_library_bp)
 app.register_blueprint(profile_api)
 app.register_blueprint(active_student_api)
+app.register_blueprint(learning_session_api)
 
 ACHIEVEMENTS = [
     {"code": "MAT1.1.1", "title": "Rakamları gösterir", "type": "select"},
@@ -55,7 +57,42 @@ def achievements():
 
 @app.route("/student")
 def student():
-    return render_template("student.html", achievements=ACHIEVEMENTS)
+    from flask import make_response
+
+    response = make_response(
+        render_template("student_dashboard.html")
+    )
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+
+    return response
+
+
+@app.route("/student/preview")
+def student_preview():
+    from flask import request, redirect, url_for, session, make_response
+    from profile_storage import get_profile
+
+    student_id = session.get("active_student_id")
+
+    if not student_id or not get_profile(student_id):
+        return redirect(url_for("teacher"))
+
+    draft_preview = request.args.get("preview") == "1"
+    saved_preview = bool(request.args.get("activity_id"))
+
+    if draft_preview == saved_preview:
+        return redirect(url_for("activity_designer"))
+
+    response = make_response(
+        render_template(
+            "student.html",
+            achievements=ACHIEVEMENTS
+        )
+    )
+
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+
+    return response
 
 
 @app.route("/activity-designer")

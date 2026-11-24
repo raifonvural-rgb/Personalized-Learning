@@ -532,3 +532,37 @@ DESIGN_DECISIONS.md.
 
 Verification evidence is maintained in
 TEST_RESULTS.md.
+
+
+## Roadmap Update — Following Step 43
+
+### Step 43 — Student Learning Dashboard and Session Management
+
+Implementation complete. Deferred verification items are
+recorded in TEST_RESULTS.md.
+
+### Step 44 — Teacher-Controlled Activity Assignment
+
+Next implementation milestone.
+
+Planned capabilities:
+
+- Explicit assignment of approved activities to students.
+- Persistent assignment records.
+- Separation of activity approval from activity assignment.
+- Display assigned activities in the Student Learning Dashboard.
+- Execution of assigned activities using the learning session context.
+- Assignment ownership and activity approval checks.
+- Prevention of unassigned activity execution through student routes.
+
+Teacher preview must remain independent of actual student learning.
+
+### Subsequent milestones
+
+- Student learning performance recording.
+- Teacher-facing student progress monitoring.
+- Continued suitability assessment against student profiles.
+- Teacher-controlled adaptation of future learning activities.
+
+Production authentication, authorization and privacy safeguards
+must be addressed before deployment beyond supervised prototype use.

@@ -690,3 +690,31 @@ If a decision changes, record:
 
 Implementation status must be updated as evidence
 becomes available.
+
+
+## DD-031 — Teacher-Assisted Student Identification
+
+Status: Accepted and implemented in Step 43.
+
+The teacher opens the Student Learning Dashboard on each
+student's computer and selects the appropriate student from
+the existing student profile list.
+
+The teacher initiates the session using Ogrenmeye Basla
+and terminates it using Oturumu Sonlandir.
+
+Passwords, PINs, device pairing and separate student accounts
+are intentionally excluded from the current supervised prototype.
+
+The learning_student_id session key is independent of
+the teacher's active_student_id session key.
+
+Separate browser sessions are intended to support simultaneous
+student use. Multiple tabs in the same browser share session
+cookies and are not independent student environments.
+
+Multi-student operation requires further verification.
+
+This decision simplifies supervised classroom operation.
+It does not provide production-grade identity verification,
+authentication or authorization.

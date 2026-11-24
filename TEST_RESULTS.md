@@ -870,3 +870,51 @@ It does not establish:
 - Comprehensive implementation of any MEB teaching method
 
 These require separate educational evaluation.
+
+
+## Step 43 — Verification Results
+
+Date: 2026-11-24
+
+Verification type: Targeted compilation and manual browser testing.
+
+| Verification item | Result |
+|---|---|
+| Python compilation | PASS |
+| Student Dashboard rendering | PASS |
+| Existing student profile selection | PASS |
+| Learning session initiation | PASS |
+| Personalized welcome message | PASS |
+| Approved quantity activity preview route | PASS |
+| Approved quantity activity rendering | PASS |
+| Quantity activity interaction | PASS |
+| Tracked-file git diff whitespace check | PASS |
+| Session restoration after refresh | NOT VERIFIED |
+| Session termination | NOT VERIFIED |
+| Student switching | DEFERRED |
+| Simultaneous different student sessions | DEFERRED |
+| Additional teacher preview scenarios | NOT VERIFIED |
+| Production authentication and authorization | NOT IMPLEMENTED |
+
+### Regression observation
+
+The first approved activity launch displayed the Student
+Learning Dashboard rather than the activity.
+
+Source inspection confirmed that all three Activity Designer
+launch references had been migrated to /student/preview.
+
+Following a forced browser reload, the correct preview URL
+and quantity activity were displayed. Activity interaction
+was subsequently confirmed to work.
+
+The observed behavior is consistent with stale browser content.
+No additional source code modification was required.
+
+### Verification limitations
+
+Only one student profile was available during manual testing.
+Multi-student verification was explicitly deferred.
+
+These results do not establish comprehensive regression coverage,
+production security or educational effectiveness.

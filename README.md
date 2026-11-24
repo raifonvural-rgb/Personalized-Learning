@@ -157,3 +157,23 @@ suitability and student learning progression.
 
 These objectives describe planned functionality,
 not completed implementation.
+
+
+## Student Learning Dashboard — Step 43
+
+The application now provides a dedicated Student Learning Dashboard
+at /student.
+
+For supervised learning, the teacher selects an existing student
+profile and initiates the student's learning session.
+
+The dashboard displays a personalized welcome message and an
+Etkinliklerim section reserved for assigned learning activities.
+
+Teacher activity previews are available through /student/preview
+and remain separate from student learning sessions.
+
+Activity assignment is planned for Step 44.
+
+The current student identification mechanism is intended for
+supervised prototype use and is not production authentication.

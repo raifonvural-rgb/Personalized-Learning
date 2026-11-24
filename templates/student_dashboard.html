@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Öğrenci Öğrenme Paneli</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #f1f5f9;
+            color: #243247;
+            font-family: Arial, sans-serif;
+        }
+
+        main {
+            width: min(760px, 94%);
+            margin: 60px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px #00000012;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            margin: 0 0 12px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 32px;
+        }
+
+        .student-selection {
+            margin: 24px 0;
+        }
+
+        label {
+            display: block;
+            font-size: 19px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        select {
+            width: 100%;
+            padding: 16px;
+            font-size: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            background: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 17px;
+            margin-top: 14px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .start-button {
+            border: none;
+            background: #2563eb;
+            color: white;
+        }
+
+        .end-button {
+            border: 2px solid #b91c1c;
+            background: white;
+            color: #b91c1c;
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        button:focus-visible,
+        select:focus-visible {
+            outline: 4px solid #93c5fd;
+            outline-offset: 3px;
+        }
+
+        .welcome {
+            text-align: center;
+            padding: 24px;
+            margin: 24px 0;
+            background: #eff6ff;
+            border-radius: 16px;
+        }
+
+        .welcome h2 {
+            font-size: 28px;
+        }
+
+        .activities {
+            padding: 24px;
+            margin-top: 24px;
+            border: 1px solid #dbe3ed;
+            border-radius: 16px;
+        }
+
+        .message {
+            min-height: 24px;
+            text-align: center;
+            margin-top: 20px;
+            color: #b91c1c;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                margin: 20px auto;
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main>
+
+    <h1>Öğrenci Öğrenme Paneli</h1>
+
+    <p class="subtitle">
+        Kişiselleştirilmiş Öğrenme
+    </p>
+
+    <section id="selectionPanel"
+             class="student-selection">
+
+        <label for="studentSelect">
+            Öğrenci Seçiniz
+        </label>
+
+        <select id="studentSelect" disabled>
+            <option value="">
+                Öğrenci seçiniz
+            </option>
+        </select>
+
+    </section>
+
+    <section id="welcomePanel"
+             class="welcome" hidden>
+
+        <h2 id="welcomeMessage"></h2>
+
+        <p>Öğrenci oturumu aktif.</p>
+
+    </section>
+
+    <button id="startButton"
+            class="start-button"
+            type="button"
+            disabled>
+        Öğrenmeye Başla
+    </button>
+
+    <button id="endButton"
+            class="end-button"
+            type="button"
+            disabled>
+        Oturumu Sonlandır
+    </button>
+
+    <section id="activitiesPanel"
+             class="activities" hidden>
+
+        <h2>Etkinliklerim</h2>
+
+        <p>
+            Etkinlik atama özelliği henüz
+            kullanıma hazır değildir.
+        </p>
+
+    </section>
+
+    <p id="message"
+       class="message"
+       role="status"
+       aria-live="polite"></p>
+
+</main>
+
+
+<script>
+    const studentSelect = document.getElementById("studentSelect");
+    const selectionPanel = document.getElementById("selectionPanel");
+    const welcomePanel = document.getElementById("welcomePanel");
+    const welcomeMessage = document.getElementById("welcomeMessage");
+    const activitiesPanel = document.getElementById("activitiesPanel");
+    const startButton = document.getElementById("startButton");
+    const endButton = document.getElementById("endButton");
+    const message = document.getElementById("message");
+
+    let currentStudent = null;
+    let busy = false;
+    let initialized = false;
+
+    async function apiRequest(url, method = "GET", data = null) {
+        const options = {
+            method: method,
+            cache: "no-store"
+        };
+
+        if (data !== null) {
+            options.headers = {
+                "Content-Type": "application/json"
+            };
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(url, options);
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                result.error || "İşlem gerçekleştirilemedi."
+            );
+        }
+
+        return result;
+    }
+
+    function updateInterface() {
+        const active = currentStudent !== null;
+
+        selectionPanel.hidden = active;
+        welcomePanel.hidden = !active;
+        activitiesPanel.hidden = !active;
+
+        studentSelect.disabled = busy || active || !initialized;
+
+        startButton.disabled =
+            busy || active || !initialized || !studentSelect.value;
+
+        endButton.disabled = busy || !active;
+
+        welcomeMessage.textContent = active
+            ? "Hoş geldin, " + currentStudent.name + "!"
+            : "";
+    }
+
+    async function loadStudents() {
+        const result = await apiRequest("/api/student-profiles");
+
+        studentSelect.replaceChildren(
+            new Option("Öğrenci seçiniz", "")
+        );
+
+        for (const student of result.students) {
+            studentSelect.add(
+                new Option(student.name, student.id)
+            );
+        }
+    }
+
+    async function initializeDashboard() {
+        busy = true;
+        updateInterface();
+
+        try {
+            const result = await apiRequest("/api/learning-session");
+            currentStudent = result.student;
+
+            if (!currentStudent) {
+                await loadStudents();
+            }
+
+            initialized = true;
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            busy = false;
+            updateInterface();
+        }
+    }
+
+    async function startLearningSession() {
+        if (busy || currentStudent || !studentSelect.value) {
+            return;
+        }
+
+        busy = true;
+        message.textContent = "";
+        updateInterface();
+
+        try {
+            const result = await apiRequest(
+                "/api/learning-session",
+                "POST",
+                {student_id: studentSelect.value}
+            );
+
+            currentStudent = result.student;
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            busy = false;
+            updateInterface();
+        }
+    }
+
+    async function endLearningSession() {
+        if (busy || !currentStudent) {
+            return;
+        }
+
+        busy = true;
+        message.textContent = "";
+        updateInterface();
+
+        try {
+            await apiRequest(
+                "/api/learning-session",
+                "DELETE"
+            );
+
+            currentStudent = null;
+            initialized = false;
+
+            await loadStudents();
+
+            studentSelect.value = "";
+            initialized = true;
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            busy = false;
+            updateInterface();
+        }
+    }
+
+    studentSelect.addEventListener("change", updateInterface);
+
+    startButton.addEventListener(
+        "click", startLearningSession
+    );
+
+    endButton.addEventListener(
+        "click", endLearningSession
+    );
+
+    initializeDashboard();
+</script>
+\n</body>
+</html>

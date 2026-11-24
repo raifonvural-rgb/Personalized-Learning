@@ -483,3 +483,42 @@ DEVELOPMENT_STATUS.md.
 
 The source code remains the authoritative reference for
 actual implementation behavior.
+
+
+## Step 43 — Student Learning Session Architecture
+
+The student-facing learning environment is separated from the
+teacher's activity design and preview environment.
+
+### Session contexts
+
+- active_student_id: teacher-selected student context.
+- learning_student_id: student learning session context.
+
+Both contexts reuse existing student profile identifiers.
+Starting or terminating a learning session does not modify
+the teacher's active student selection.
+
+### Routes
+
+| Route | Responsibility |
+|---|---|
+| /student | Student Learning Dashboard |
+| /student/preview?preview=1 | Teacher draft preview |
+| /student/preview?activity_id=ID | Teacher approved activity preview |
+| /api/learning-session | Read, initiate or terminate learning session |
+
+The learning_session_api module provides GET, POST and DELETE
+operations for learning session management.
+
+The student dashboard uses existing student profiles.
+No separate student identity database is introduced.
+
+Teacher preview remains separate from actual student learning.
+The existing educational activity execution engine is preserved.
+
+The future /student/activity/<activity_id> route is reserved
+for assigned activity execution and is not implemented yet.
+
+Session separation is not authentication or full authorization.
+The current architecture supports supervised prototype use only.

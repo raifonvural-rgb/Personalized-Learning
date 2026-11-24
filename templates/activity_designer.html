@@ -420,7 +420,7 @@ tryStudentButton.addEventListener("click", () => {
         JSON.stringify(validatedStudentDraft)
     );
 
-    window.location.href = "/student?preview=1";
+    window.location.href = "/student/preview?preview=1";
 });
 
 
@@ -898,7 +898,7 @@ async function openActivity() {
         if (!response.ok || !result.ok) {
             throw new Error(result.error || "Etkinlik açılamadı.");
         }
-        window.location.href = "/student?activity_id=" +
+        window.location.href = "/student/preview?activity_id=" +
             encodeURIComponent(savedActivityId);
     } catch (e) {
         workflowMessage(e.message, true);
@@ -962,7 +962,7 @@ async function loadSavedActivities() {
                 button.textContent = "Aç";
                 button.addEventListener("click", () => {
                     window.location.href =
-                        "/student?activity_id=" +
+                        "/student/preview?activity_id=" +
                         encodeURIComponent(activity.id);
                 });
                 row.appendChild(button);
