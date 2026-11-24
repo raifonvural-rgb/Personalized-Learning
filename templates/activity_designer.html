@@ -918,6 +918,21 @@ async function loadSavedActivities() {
             throw new Error(result.error || "Etkinlikler yüklenemedi.");
         }
 
+        const assignmentResponse = await fetch(
+            "/api/activity-assignment",
+            {cache: "no-store"}
+        );
+
+        const assignmentResult = await assignmentResponse.json();
+
+        if (!assignmentResponse.ok || !assignmentResult.ok) {
+            throw new Error(
+                assignmentResult.error || "Atama bilgisi alınamadı."
+            );
+        }
+
+        const currentAssignment = assignmentResult.assignment;
+
         container.replaceChildren();
 
         if (!result.activities.length) {
@@ -965,7 +980,62 @@ async function loadSavedActivities() {
                         "/student/preview?activity_id=" +
                         encodeURIComponent(activity.id);
                 });
-                row.appendChild(button);
+                const assignButton = document.createElement("button");
+                assignButton.type = "button";
+                assignButton.textContent = "Öğrenciye Ata";
+                assignButton.style.background = "#2563eb";
+                assignButton.style.color = "white";
+
+                assignButton.addEventListener("click", async () => {
+                    assignButton.disabled = true;
+
+                    try {
+                        const response = await fetch(
+                            "/api/activity-assignment",
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({
+                                    activity_id: activity.id
+                                })
+                            }
+                        );
+
+                        const result = await response.json();
+
+                        if (!response.ok || !result.ok) {
+                            throw new Error(
+                                result.error || "Etkinlik atanamadı."
+                            );
+                        }
+
+                        await loadSavedActivities();
+
+                    } catch (error) {
+                        alert(error.message);
+                        assignButton.disabled = false;
+                    }
+                });
+
+                if (
+                    currentAssignment &&
+                    currentAssignment.activity_id === activity.id
+                ) {
+                    assignButton.textContent = "Atandı";
+                    assignButton.style.background = "#15803d";
+                    assignButton.disabled = true;
+                }
+
+                const actions = document.createElement("div");
+                actions.style.cssText =
+                    "display:flex;gap:8px;flex-wrap:wrap;";
+
+                actions.appendChild(button);
+                actions.appendChild(assignButton);
+
+                row.appendChild(actions);
             }
 
             container.appendChild(row);

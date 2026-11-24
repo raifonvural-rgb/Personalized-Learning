@@ -895,9 +895,19 @@
         tracingCanvas.addEventListener('lostpointercapture', stopTracing);
 
 
-        const savedActivityId = params.get("activity_id");
+        const learningMode =
+            {{ learning_mode | default(false) | tojson }};
+
+        const learningActivityId =
+            {{ learning_activity_id | default(none) | tojson }};
+
+        const savedActivityId = learningMode
+            ? learningActivityId
+            : params.get("activity_id");
+
         const teacherPreviewMode =
-            params.get("preview") === "1" || Boolean(savedActivityId);
+            !learningMode &&
+            (params.get("preview") === "1" || Boolean(savedActivityId));
         let teacherPreviewDraft = null;
 
 
@@ -1386,9 +1396,13 @@
 
             try {
                 if (savedActivityId) {
+                    const endpoint = learningMode
+                        ? "/api/learning-activity/"
+                        : "/api/student-activities/";
+
                     const response = await fetch(
-                        "/api/student-activities/" +
-                        encodeURIComponent(savedActivityId)
+                        endpoint + encodeURIComponent(savedActivityId),
+                        {cache: "no-store"}
                     );
                     const result = await response.json();
 
@@ -1448,10 +1462,14 @@
 
             if (!valid) {
                 instruction.textContent =
-                    "Geçerli bir öğretmen önizlemesi bulunamadı.";
+                    learningMode
+                        ? "Etkinlik yüklenemedi."
+                        : "Geçerli bir öğretmen önizlemesi bulunamadı.";
                 cards.replaceChildren();
                 feedback.textContent =
-                    "Etkinlik tasarımcısına dönerek yeniden deneyiniz.";
+                    learningMode
+                        ? "Öğretmeninize bildiriniz."
+                        : "Etkinlik tasarımcısına dönerek yeniden deneyiniz.";
                 return;
             }
 
@@ -1469,12 +1487,84 @@
             showTeacherQuestion();
         }
 
-        if (teacherPreviewMode) {
+        if (learningMode || teacherPreviewMode) {
             startTeacherPreview();
         } else {
             createQuestion();
         }
     </script>
+
+
+{% if learning_mode | default(false) %}
+
+<div style="text-align:center; margin:24px auto;">
+    <button
+        id="endLearningSessionButton"
+        type="button"
+        style="
+            padding:14px 28px;
+            background:white;
+            color:#b91c1c;
+            border:2px solid #b91c1c;
+            border-radius:12px;
+            font-size:18px;
+            font-weight:bold;
+            cursor:pointer;
+        ">
+        Oturumu Sonlandır
+    </button>
+
+    <p id="endLearningSessionMessage"
+       role="status"
+       aria-live="polite"
+       style="color:#b91c1c;"></p>
+</div>
+
+<script>
+    document.getElementById("endLearningSessionButton")
+        .addEventListener("click", async function () {
+
+            const button = this;
+
+            const message = document.getElementById(
+                "endLearningSessionMessage"
+            );
+
+            button.disabled = true;
+            message.textContent = "";
+
+            try {
+                const response = await fetch(
+                    "/api/learning-session",
+                    {
+                        method: "DELETE",
+                        cache: "no-store"
+                    }
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        result.error ||
+                        "Oturum sonlandırılamadı."
+                    );
+                }
+
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                }
+
+                window.location.replace("/student");
+
+            } catch (error) {
+                message.textContent = error.message;
+                button.disabled = false;
+            }
+        });
+</script>
+
+{% endif %}
 
 </body>
 </html>

@@ -191,8 +191,7 @@
         <h2>Etkinliklerim</h2>
 
         <p>
-            Etkinlik atama özelliği henüz
-            kullanıma hazır değildir.
+            Atanan etkinlik açılıyor...
         </p>
 
     </section>
@@ -277,6 +276,17 @@
         }
     }
 
+    function launchAssignedActivity(assignment) {
+        if (!assignment || !assignment.activity_id) {
+            throw new Error("Henüz etkinlik atanmadı.");
+        }
+
+        window.location.replace(
+            "/student/activity/" +
+            encodeURIComponent(assignment.activity_id)
+        );
+    }
+
     async function initializeDashboard() {
         busy = true;
         updateInterface();
@@ -284,6 +294,11 @@
         try {
             const result = await apiRequest("/api/learning-session");
             currentStudent = result.student;
+
+            if (currentStudent && result.assignment) {
+                launchAssignedActivity(result.assignment);
+                return;
+            }
 
             if (!currentStudent) {
                 await loadStudents();
@@ -316,6 +331,8 @@
             );
 
             currentStudent = result.student;
+
+            launchAssignedActivity(result.assignment);
 
         } catch (error) {
             message.textContent = error.message;
@@ -368,5 +385,6 @@
 
     initializeDashboard();
 </script>
-\n</body>
+
+</body>
 </html>

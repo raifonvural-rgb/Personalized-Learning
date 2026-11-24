@@ -5,6 +5,7 @@ from pathlib import Path
 from profile_api import profile_api
 from active_student_api import active_student_api
 from learning_session_api import learning_session_api
+from assignment_api import assignment_api
 
 app = Flask(__name__)
 
@@ -16,6 +17,7 @@ app.register_blueprint(visual_library_bp)
 app.register_blueprint(profile_api)
 app.register_blueprint(active_student_api)
 app.register_blueprint(learning_session_api)
+app.register_blueprint(assignment_api)
 
 ACHIEVEMENTS = [
     {"code": "MAT1.1.1", "title": "Rakamları gösterir", "type": "select"},
@@ -89,6 +91,102 @@ def student_preview():
             achievements=ACHIEVEMENTS
         )
     )
+
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+
+    return response
+
+
+def get_assigned_learning_activity(activity_id):
+    from flask import session
+    from profile_storage import get_profile
+    from assignment_storage import get_assignment
+    from activity_storage import get_activity
+    from activity_integrity import validate_activity_draft_integrity
+
+    student_id = session.get("learning_student_id")
+    assignment_id = session.get("learning_assignment_id")
+
+    if not student_id or not assignment_id:
+        return None
+
+    if get_profile(student_id) is None:
+        return None
+
+    assignment = get_assignment(student_id)
+
+    if not assignment:
+        return None
+
+    if assignment.get("id") != assignment_id:
+        return None
+
+    if assignment.get("activity_id") != activity_id:
+        return None
+
+    activity = get_activity(activity_id)
+
+    if not activity:
+        return None
+
+    if activity.get("student_id") != student_id:
+        return None
+
+    if activity.get("status") != "approved":
+        return None
+
+    try:
+        validate_activity_draft_integrity(activity["config"])
+    except (ValueError, TypeError, KeyError):
+        return None
+
+    return activity
+
+
+@app.route("/student/activity/<activity_id>")
+def student_assigned_activity(activity_id):
+    from flask import redirect, url_for, make_response, session
+
+    activity = get_assigned_learning_activity(activity_id)
+
+    if activity is None:
+        session.pop("learning_student_id", None)
+        session.pop("learning_assignment_id", None)
+
+        return redirect(url_for("student"))
+
+    response = make_response(
+        render_template(
+            "student.html",
+            achievements=ACHIEVEMENTS,
+            learning_mode=True,
+            learning_activity_id=activity_id
+        )
+    )
+
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+
+    return response
+
+
+@app.route("/api/learning-activity/<activity_id>")
+def learning_activity_api(activity_id):
+    from flask import jsonify, make_response
+
+    activity = get_assigned_learning_activity(activity_id)
+
+    if activity is None:
+        response = make_response(
+            jsonify(
+                ok=False,
+                error="Etkinlik kullanılamıyor. Öğretmeninize danışınız."
+            ),
+            403
+        )
+    else:
+        response = make_response(
+            jsonify(ok=True, activity=activity)
+        )
 
     response.headers["Cache-Control"] = "no-store, max-age=0"
 
