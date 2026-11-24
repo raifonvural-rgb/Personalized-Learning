@@ -1,0 +1,42 @@
+<svg
+xmlns="http://www.w3.org/2000/svg"
+width="240"
+height="240"
+viewBox="0 0 200 200"
+role="img"
+aria-label="Basketbol topu">
+
+<defs>
+    <clipPath id="basketball-clip">
+        <circle cx="100" cy="100" r="83"/>
+    </clipPath>
+</defs>
+
+<!-- Topun ana gövdesi -->
+<circle
+cx="100"
+cy="100"
+r="83"
+fill="#4D9BE9"
+stroke="#173E65"
+stroke-width="4"/>
+
+<!-- Basketbol topu çizgileri -->
+<g
+clip-path="url(#basketball-clip)"
+fill="none"
+stroke="#173E65"
+stroke-width="4">
+
+    <path d="M100 17V183"/>
+    <path d="M17 100H183"/>
+
+    <path
+    d="M50 32C108 65 108 135 50 168"/>
+
+    <path
+    d="M150 32C92 65 92 135 150 168"/>
+
+</g>
+
+</svg>

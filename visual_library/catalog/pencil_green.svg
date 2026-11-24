@@ -1,0 +1,65 @@
+<svg
+xmlns="http://www.w3.org/2000/svg"
+width="340"
+height="110"
+viewBox="0 0 340 110"
+role="img"
+aria-label="Silgili, ucu açılmış kurşun kalem">
+
+<g transform="translate(12 12)">
+
+<!-- Silgi -->
+<rect
+x="8" y="25"
+width="43" height="40"
+rx="9"
+fill="#D5E8DB"
+stroke="#35455C"
+stroke-width="2"/>
+
+<!-- Metal tutucu -->
+<rect
+x="43" y="24"
+width="20" height="42"
+fill="#B5BDC9"
+stroke="#35455C"
+stroke-width="2"/>
+
+<!-- Kalem gövdesi -->
+<rect
+x="63" y="25"
+width="201" height="40"
+fill="#62B47C"
+stroke="#35455C"
+stroke-width="2"/>
+
+<!-- Gövde ışık çizgisi -->
+<path
+d="M63 34H264"
+fill="none"
+stroke="#35455C"
+stroke-opacity="0.18"
+stroke-width="2"/>
+
+<!-- Gövde alt çizgisi -->
+<path
+d="M63 55H264"
+fill="none"
+stroke="#35455C"
+stroke-opacity="0.3"
+stroke-width="2"/>
+
+<!-- Açılmış ahşap uç -->
+<path
+d="M264 25L308 45L264 65Z"
+fill="#E5B983"
+stroke="#35455C"
+stroke-width="2"/>
+
+<!-- Grafit uç -->
+<path
+d="M294 38L308 45L294 52Z"
+fill="#30343B"/>
+
+</g>
+</svg>

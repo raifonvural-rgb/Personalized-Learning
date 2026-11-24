@@ -1,0 +1,793 @@
+/* ========================================
+   ÖĞRENCİ PROFİLİ — GÖRSEL TASARIM
+   ======================================== */
+
+.profile-selection-panel,
+.student-profile-dialog {
+    --profile-navy: #243653;
+    --profile-blue: #4169b2;
+    --profile-background: #f4f6fa;
+    --profile-border: #e0e6ef;
+    --profile-muted: #64748b;
+    --profile-light-blue: #eaf0fa;
+    --profile-success: #16805c;
+    --profile-error: #b42318;
+}
+
+
+/* ========================================
+   1. ÖĞRENCİ SEÇİM PANELİ
+   ======================================== */
+
+.profile-selection-panel {
+    background: white;
+    border: 1px solid var(--profile-border);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+}
+
+.profile-selection-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+}
+
+.profile-selection-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 54px;
+    height: 54px;
+    border-radius: 15px;
+    background: var(--profile-light-blue);
+    color: var(--profile-blue);
+}
+
+.profile-selection-icon svg {
+    width: 29px;
+    height: 29px;
+}
+
+.profile-selection-header h2 {
+    margin: 0 0 8px;
+    font-size: 23px;
+    color: var(--profile-navy);
+}
+
+.profile-selection-header p {
+    margin: 0;
+    color: var(--profile-muted);
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.profile-selection-controls {
+    margin-top: 24px;
+}
+
+.profile-selection-controls > label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.profile-selection-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#profile-student-select {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--profile-border);
+    border-radius: 10px;
+    background: white;
+    color: var(--profile-navy);
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.profile-selection-status {
+    font-size: 13px;
+    line-height: 1.5;
+    margin-top: 12px;
+    color: var(--profile-success);
+}
+
+.profile-selection-status:empty {
+    display: none;
+}
+
+
+/* ========================================
+   2. ORTAK DÜĞMELER
+   ======================================== */
+
+.profile-primary-button,
+.profile-secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 13px 21px;
+    min-height: 46px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.profile-primary-button {
+    border: 1px solid var(--profile-blue);
+    background: var(--profile-blue);
+    color: white;
+}
+
+.profile-primary-button:hover {
+    background: #345a9e;
+    box-shadow: 0 3px 10px rgba(36, 54, 83, 0.12);
+}
+
+.profile-secondary-button {
+    border: 1px solid var(--profile-border);
+    background: white;
+    color: var(--profile-navy);
+}
+
+.profile-secondary-button:hover {
+    background: var(--profile-background);
+}
+
+.profile-primary-button svg,
+.profile-secondary-button svg {
+    width: 19px;
+    height: 19px;
+}
+
+.profile-primary-button:disabled,
+.profile-secondary-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+
+/* ========================================
+   3. POP-UP PENCERESİ
+   ======================================== */
+
+.student-profile-dialog {
+    width: min(1150px, calc(100vw - 40px));
+    max-width: none;
+    height: min(850px, calc(100dvh - 50px));
+    max-height: none;
+    padding: 0;
+    border: none;
+    border-radius: 20px;
+    background: white;
+    color: var(--profile-navy);
+    box-shadow: 0 25px 90px rgba(20, 35, 60, 0.30);
+    overflow: hidden;
+}
+
+.student-profile-dialog::backdrop {
+    background: rgba(23, 37, 58, 0.58);
+    backdrop-filter: blur(3px);
+}
+
+.profile-dialog-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+
+/* ========================================
+   4. PENCERE BAŞLIĞI
+   ======================================== */
+
+.profile-dialog-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 20px;
+    padding: 25px 30px;
+    border: none;
+    background: var(--profile-navy);
+    color: white;
+}
+
+.profile-dialog-eyebrow {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1.6px;
+    color: #b9cbe5;
+    margin-bottom: 8px;
+}
+
+.profile-dialog-heading h2 {
+    font-size: 26px;
+    margin: 0;
+    font-weight: 700;
+}
+
+.profile-dialog-heading p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: #c8d5e8;
+}
+
+.profile-close-button {
+    width: 37px;
+    height: 37px;
+    border-radius: 9px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.profile-close-button:hover {
+    background: rgba(255, 255, 255, 0.20);
+}
+
+
+/* ========================================
+   5. FORM VE ANA YERLEŞİM
+   ======================================== */
+
+.student-profile-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.profile-dialog-body {
+    display: grid;
+    grid-template-columns: 275px minmax(0, 1fr);
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+
+/* ========================================
+   6. SOL GEZİNME MENÜSÜ
+   ======================================== */
+
+.profile-sidebar {
+    background: var(--profile-background);
+    border-right: 1px solid var(--profile-border);
+    padding: 22px 14px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.profile-sidebar-title {
+    color: var(--profile-muted);
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1.3px;
+    padding: 0 12px;
+    margin-bottom: 15px;
+}
+
+#profile-section-navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.profile-nav-button {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    padding: 12px;
+    text-align: left;
+    color: #52647f;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.profile-nav-button:hover {
+    background: #e8edf5;
+}
+
+.profile-nav-button.active,
+.profile-nav-button[aria-current="true"] {
+    border-color: #d3e0f5;
+    background: #e2ebfa;
+    color: #315a9e;
+    font-weight: bold;
+}
+
+.profile-nav-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 21px;
+    font-size: 17px;
+}
+
+.profile-nav-icon svg {
+    width: 19px;
+    height: 19px;
+}
+
+.profile-nav-label {
+    flex: 1;
+}
+
+.profile-sidebar-note {
+    border-top: 1px solid var(--profile-border);
+    padding: 20px 12px 10px;
+    margin-top: 22px;
+    color: var(--profile-muted);
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.profile-sidebar-note strong {
+    font-size: 12px;
+    color: var(--profile-navy);
+}
+
+.profile-sidebar-note p {
+    margin: 7px 0 0;
+}
+
+
+/* ========================================
+   7. SAĞ İÇERİK ALANI
+   ======================================== */
+
+.profile-content {
+    min-width: 0;
+    min-height: 0;
+    padding: 28px 32px;
+    overflow-y: auto;
+    background: white;
+    scroll-behavior: smooth;
+}
+
+.profile-content-header {
+    border-bottom: 1px solid var(--profile-border);
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+}
+
+.profile-section-counter {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--profile-blue);
+    letter-spacing: 0.7px;
+    margin-bottom: 8px;
+}
+
+.profile-content-header h3 {
+    color: var(--profile-navy);
+    font-size: 24px;
+    margin: 0 0 8px;
+    line-height: 1.3;
+}
+
+.profile-content-header p {
+    color: var(--profile-muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+
+/* ========================================
+   8. DİNAMİK FORM ALANLARI
+   ======================================== */
+
+.profile-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 23px 20px;
+    padding-bottom: 15px;
+}
+
+.profile-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.profile-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.profile-field-label {
+    color: var(--profile-navy);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.profile-required-marker {
+    color: var(--profile-error);
+}
+
+.profile-field input:not([type="checkbox"]):not([type="color"]),
+.profile-field select,
+.profile-field textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 12px 13px;
+    border: 1px solid var(--profile-border);
+    border-radius: 9px;
+    background: #fcfdff;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--profile-navy);
+}
+
+.profile-field textarea {
+    min-height: 88px;
+    resize: vertical;
+}
+
+.profile-field input::placeholder,
+.profile-field textarea::placeholder {
+    color: #8995a7;
+}
+
+.profile-field input[type="color"] {
+    width: 55px;
+    height: 40px;
+    border: 1px solid var(--profile-border);
+    border-radius: 8px;
+    padding: 4px;
+    background: white;
+    cursor: pointer;
+}
+
+.profile-field-help {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--profile-muted);
+}
+
+.profile-field input:focus,
+.profile-field select:focus,
+.profile-field textarea:focus,
+#profile-student-select:focus {
+    outline: none;
+    border-color: var(--profile-blue);
+    box-shadow: 0 0 0 3px rgba(65, 105, 178, 0.13);
+}
+
+.student-profile-dialog button:focus-visible,
+.profile-selection-panel button:focus-visible {
+    outline: 3px solid #83a7df;
+    outline-offset: 3px;
+}
+
+
+/* ========================================
+   9. ÇOKLU SEÇİM ALANLARI
+   ======================================== */
+
+.profile-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--profile-border);
+    border-radius: 10px;
+    background: #fcfdff;
+}
+
+.profile-checkbox-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 11px;
+    border: 1px solid var(--profile-border);
+    border-radius: 8px;
+    background: white;
+    color: var(--profile-navy);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.profile-checkbox-option:has(input:checked) {
+    background: var(--profile-light-blue);
+    border-color: #adc4e8;
+    color: #315a9e;
+}
+
+.profile-checkbox-option input {
+    accent-color: var(--profile-blue);
+    width: 15px;
+    height: 15px;
+    margin: 0;
+}
+
+.profile-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+
+/* ========================================
+   10. EK BİREYSEL GEREKSİNİMLER
+   ======================================== */
+
+.profile-requirements {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-requirement-card {
+    background: var(--profile-background);
+    border: 1px solid var(--profile-border);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.profile-requirement-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.profile-requirement-header strong {
+    font-size: 14px;
+}
+
+.profile-requirement-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.profile-remove-button {
+    padding: 7px 12px;
+    border: 1px solid #edcdcd;
+    background: #fff7f7;
+    color: var(--profile-error);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.profile-remove-button:hover {
+    background: #fde9e9;
+}
+
+.profile-add-button {
+    grid-column: 1 / -1;
+    padding: 15px;
+    width: 100%;
+    border: 1px dashed #a8bad7;
+    border-radius: 10px;
+    background: #f7faff;
+    color: var(--profile-blue);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.profile-add-button:hover {
+    background: var(--profile-light-blue);
+}
+
+.profile-empty-message {
+    padding: 25px;
+    border: 1px dashed var(--profile-border);
+    border-radius: 12px;
+    text-align: center;
+    color: var(--profile-muted);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+
+/* ========================================
+   11. ALT KAYIT ÇUBUĞU
+   ======================================== */
+
+.profile-dialog-footer {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 18px 28px;
+    border-top: 1px solid var(--profile-border);
+    background: white;
+    text-align: left;
+}
+
+.profile-footer-information {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-required-note {
+    color: var(--profile-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.profile-footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.profile-save-status {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--profile-success);
+    margin-bottom: 5px;
+}
+
+.profile-save-status:empty {
+    display: none;
+}
+
+.profile-save-status.error,
+.profile-selection-status.error {
+    color: var(--profile-error);
+}
+
+.profile-save-status.success,
+.profile-selection-status.success {
+    color: var(--profile-success);
+}
+
+
+/* ========================================
+   12. KÜÇÜK EKRAN UYUMLULUĞU
+   ======================================== */
+
+@media (max-width: 800px) {
+
+    .student-profile-dialog {
+        width: calc(100vw - 20px);
+        height: calc(100dvh - 20px);
+        border-radius: 14px;
+    }
+
+    .profile-dialog-header {
+        padding: 20px;
+    }
+
+    .profile-dialog-body {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .profile-sidebar {
+        padding: 10px;
+        border-right: none;
+        border-bottom: 1px solid var(--profile-border);
+        overflow: hidden;
+    }
+
+    .profile-sidebar-title,
+    .profile-sidebar-note {
+        display: none;
+    }
+
+    #profile-section-navigation {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        gap: 6px;
+    }
+
+    .profile-nav-button {
+        width: auto;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .profile-content {
+        padding: 22px;
+    }
+
+    .profile-dialog-footer {
+        padding: 15px 20px;
+    }
+
+}
+
+@media (max-width: 550px) {
+
+    .profile-selection-panel {
+        padding: 20px;
+    }
+
+    .profile-selection-header {
+        gap: 12px;
+    }
+
+    .profile-selection-header h2 {
+        font-size: 20px;
+    }
+
+    .profile-selection-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .profile-fields,
+    .profile-requirement-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .profile-content {
+        padding: 18px;
+    }
+
+    .profile-content-header h3 {
+        font-size: 21px;
+    }
+
+    .profile-dialog-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .profile-footer-actions {
+        justify-content: flex-end;
+    }
+
+    .profile-footer-actions .profile-primary-button {
+        flex: 1;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .profile-content {
+        scroll-behavior: auto;
+    }
+
+    .profile-primary-button,
+    .profile-secondary-button {
+        transition: none;
+    }
+
+}

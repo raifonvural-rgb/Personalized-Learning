@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Matematik Etkinliği</title>
+    <style>
+        :root {
+            --background: #f5f7fb;
+            --primary: #3459a6;
+            --text: #24324a;
+            --border: #dce3ef;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--background);
+            color: var(--text);
+            font-family: Arial, sans-serif;
+        }
+
+        .activity {
+            max-width: 950px;
+            margin: 40px auto;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .activity-label {
+            color: #52647f;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: clamp(30px, 5vw, 46px);
+            margin: 25px 0;
+        }
+
+        .instruction {
+            font-size: 28px;
+            margin: 25px 0;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+            margin: 40px 0;
+        }
+
+        .number-card {
+            min-height: 210px;
+            background: white;
+            border: 3px solid var(--border);
+            border-radius: 24px;
+            font-size: 100px;
+            font-weight: bold;
+            color: var(--text);
+            cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+
+        .number-card:hover,
+        .number-card:focus-visible {
+            border-color: var(--primary);
+        }
+
+        .number-card:disabled {
+            cursor: default;
+        }
+
+        .correct {
+            background: #e4f5e9;
+            border-color: #348b57;
+        }
+
+        .incorrect {
+            background: #fff0ed;
+            border-color: #c16b5c;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-button {
+            min-height: 60px;
+            padding: 15px 25px;
+            border: 0;
+            border-radius: 14px;
+            font-size: 20px;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+        }
+
+        .secondary {
+            background: #e4eaf5;
+            color: var(--text);
+        }
+
+        #feedback {
+            min-height: 40px;
+            margin: 20px;
+            font-size: 26px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 650px) {
+            .activity { margin: 10px auto; padding: 15px; }
+            .cards { gap: 10px; }
+            .number-card {
+                min-height: 130px;
+                font-size: clamp(45px, 12vw, 75px);
+                border-radius: 16px;
+            }
+        }
+
+.tracing-panel {
+    margin: 30px auto;
+    padding: 25px;
+    max-width: 450px;
+    background: white;
+    border: 2px solid #dce3ef;
+    border-radius: 24px;
+}
+.tracing-panel[hidden] {
+    display: none;
+}
+.tracing-panel h2 {
+    font-size: 26px;
+}
+#tracing-canvas {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    margin: 20px auto;
+    background: #fafcff;
+    border: 2px solid #dce3ef;
+    border-radius: 18px;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+
+.activity {
+    max-width: 1250px;
+}
+.activity-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+    gap: 24px;
+    align-items: start;
+}
+.activity-layout .cards {
+    margin: 25px 0;
+}
+.activity-layout .tracing-panel {
+    margin: 0;
+}
+@media (max-width: 850px) {
+    .activity-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+.drawing-feedback {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #dce3ef;
+}
+.drawing-feedback > p:first-child {
+    font-size: 15px;
+    color: #64748b;
+}
+.drawing-feedback button {
+    margin: 5px;
+    font-size: 17px;
+}
+#drawing-message {
+    min-height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #3459a6;
+}
+
+
+
+/* Balloon strings */
+.cards.layout-balloons {
+    padding-bottom: 75px;
+}
+
+.cards.layout-balloons .number-card {
+    position: relative;
+    overflow: visible;
+}
+
+.cards.layout-balloons .number-card::before {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 12px solid #9fb4d7;
+}
+
+.cards.layout-balloons .number-card::after {
+    content: "";
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    width: 2px;
+    height: 65px;
+    background: #8795a8;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+
+/* Flower petal arrangement */
+.cards.layout-flower_petals {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    padding: 45px 20px;
+    isolation: isolate;
+}
+
+.cards.layout-flower_petals::before {
+    content: "";
+    position: absolute;
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: #f9cb55;
+    border: 4px solid #e4a82e;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+}
+
+.cards.layout-flower_petals .number-card {
+    position: relative;
+    border-radius: 65% 35% 65% 35%;
+    background: #fce3f0;
+    border: 3px solid #dc8bb8;
+    min-width: 100px;
+    min-height: 115px;
+    z-index: 1;
+}
+
+.cards.layout-flower_petals .number-card:hover {
+    background: #f8cde5;
+}
+
+
+/* Radial flower layout */
+.cards.layout-flower_petals {
+    position: relative;
+    display: block;
+    width: 380px;
+    max-width: 100%;
+    height: 380px;
+    margin: 20px auto;
+    padding: 0;
+    isolation: isolate;
+}
+
+.cards.layout-flower_petals::before {
+    content: "";
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #f9cb55;
+    border: 4px solid #e4a82e;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.cards.layout-flower_petals .number-card {
+    position: absolute;
+    width: 115px;
+    height: 135px;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border-radius: 50%;
+    background: #fce3f0;
+    border: 3px solid #dc8bb8;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+}
+
+.cards.layout-flower_petals .number-card:nth-child(1) {
+    left: 50%;
+    top: 19%;
+}
+
+.cards.layout-flower_petals .number-card:nth-child(2) {
+    left: 81%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cards.layout-flower_petals .number-card:nth-child(3) {
+    left: 50%;
+    top: 81%;
+}
+
+.cards.layout-flower_petals .number-card:nth-child(4) {
+    left: 19%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.cards.layout-flower_petals .number-card.correct {
+    background: #e4f5e9;
+    border-color: #348b57;
+}
+
+
+/* Compact object cards */
+.cards.layout-object_cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.cards.layout-object_cards .number-card {
+    width: 175px;
+    height: 195px;
+    min-width: 0;
+    min-height: 0;
+    padding: 14px;
+    gap: 8px;
+}
+
+.cards.layout-object_cards .number-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.cards.layout-object_cards .number-card span {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+
+/* Four-column object card layout */
+.cards.layout-object_cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cards.layout-object_cards .number-card {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 190px;
+}
+
+@media (max-width: 600px) {
+    .cards.layout-object_cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Teacher-selected digit recognition layouts */
+.cards.layout-balloons .number-card {
+    border-radius: 50% 50% 45% 45%;
+    background: #dceaff;
+}
+
+.cards.layout-flower_petals .number-card {
+    border-radius: 50% 15% 50% 15%;
+    background: #fce3f0;
+}
+
+.cards.layout-object_cards .number-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 48px;
+}
+
+.cards.layout-object_cards .number-card img {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
+}
+
+.cards.layout-object_cards .number-card span {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.cards .number-card.correct {
+    background: #e4f5e9;
+    border-color: #348b57;
+}
+
+</style>
+
+<style>
+@keyframes quantityAppear {
+    from { opacity:0; transform:scale(.5) translateY(12px); }
+    to { opacity:1; transform:scale(1) translateY(0); }
+}
+</style>
+
+<style>
+@keyframes correctAnswerMotion {
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    20%  { transform: translate(65px, 0) rotate(12deg); }
+    40%  { transform: translate(-65px, 0) rotate(-12deg); }
+    60%  { transform: translate(0, -50px) rotate(0deg); }
+    80%  { transform: translate(0, 50px) rotate(12deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.correct-answer-animation {
+    animation: correctAnswerMotion 2.5s ease-in-out 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .correct-answer-animation {
+        animation: none;
+    }
+}
+</style>
+
+</head>
+<body>
+    <main class="activity">
+        <div class="activity-label">MAT1.1.1 — Rakamları gösterir</div>
+
+        <h1>Rakamları Öğreniyorum</h1>
+
+        <p class="instruction" id="instruction">
+            5 rakamını göster.
+        </p>
+
+        <div class="activity-layout">
+          <div class="selection-area">
+        <div class="cards" id="cards">
+            <button class="number-card" onclick="chooseNumber(3)">3</button>
+            <button class="number-card" onclick="chooseNumber(5)">5</button>
+            <button class="number-card" onclick="chooseNumber(8)">8</button>
+        </div>
+
+        <div id="feedback" role="status" aria-live="polite"></div>
+
+          </div>
+        <section id="tracing-panel" class="tracing-panel" hidden>
+            <h2>Şimdi rakamı çizelim</h2>
+            <p>Noktaların üzerinden geçerek rakamı tamamla.</p>
+
+            <canvas id="tracing-canvas"
+                    width="360"
+                    height="400"
+                    aria-label="Rakam çizme alanı">
+            </canvas>
+
+            <div class="controls">
+                <button class="control-button secondary"
+                        onclick="clearTracing()">
+                    Yeniden Çiz
+                </button>
+            </div>
+
+            <div class="drawing-feedback">
+                <p>Öğretmen değerlendirmesi</p>
+                <button class="control-button"
+                        onclick="giveDrawingFeedback(true)">
+                    ✓ Şahane!
+                </button>
+                <button class="control-button secondary"
+                        onclick="giveDrawingFeedback(false)">
+                    ↻ Bir daha deneyelim
+                </button>
+                <p id="drawing-message" role="status"
+                   aria-live="polite"></p>
+            </div>
+        </section>
+        </div>
+
+
+        <div class="controls">
+            <button class="control-button secondary" onclick="speakInstruction()">
+                🔊 Dinle
+            </button>
+            <button class="control-button" onclick="nextQuestion()">
+                Sonraki →
+            </button>
+        </div>
+    </main>
+
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        const choiceCount = params.get('choices') === '2' ? 2 : 3;
+        const maxNumber = params.get('range') === '5' ? 5 : 9;
+        const audioEnabled = params.get('audio') !== '0';
+
+        let target = 0;
+        let answered = false;
+        let questionIndex = 0;
+        let wrongAttempts = 0;
+
+        const instruction = document.getElementById('instruction');
+        const cards = document.getElementById('cards');
+        const feedback = document.getElementById('feedback');
+
+        const listenButton = document.querySelector(
+            '[onclick="speakInstruction()"]'
+        );
+
+        if (!audioEnabled) {
+            listenButton.hidden = true;
+        }
+
+        function speakInstruction() {
+            if (!audioEnabled) return;
+
+            if (!('speechSynthesis' in window)) {
+                feedback.textContent = 'Sesli yönerge desteklenmiyor.';
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+
+            const message = new SpeechSynthesisUtterance(
+                target + ' rakamını göster.'
+            );
+
+            message.lang = 'tr-TR';
+            message.rate = 0.85;
+
+            window.speechSynthesis.speak(message);
+        }
+
+        function createQuestion() {
+            const numbers = Array.from(
+                {length: maxNumber + 1},
+                (_, i) => i
+            );
+
+            target = numbers[questionIndex % numbers.length];
+
+            const distractors = numbers
+                .filter(n => n !== target)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, choiceCount - 1);
+
+            const choices = [target, ...distractors]
+                .sort(() => Math.random() - 0.5);
+
+            answered = false;
+            wrongAttempts = 0;
+            document.getElementById('tracing-panel').hidden = true;
+
+            instruction.textContent = target + ' rakamını göster.';
+            feedback.textContent = '';
+
+            cards.innerHTML = '';
+
+            choices.forEach(number => {
+                const button = document.createElement('button');
+                button.className = 'number-card';
+                button.textContent = number;
+                button.addEventListener('click', () => {
+                    chooseNumber(number, button);
+                });
+                cards.appendChild(button);
+            });
+        }
+
+        function chooseNumber(number, button) {
+            if (answered || button.disabled) return;
+
+            if (number === target) {
+                answered = true;
+                button.classList.add('correct');
+                showTracing(target);
+                feedback.textContent = 'Doğru! Aferin.';
+
+                document.querySelectorAll('.number-card')
+                    .forEach(b => b.disabled = true);
+            } else {
+                wrongAttempts++;
+                button.classList.add('incorrect');
+                button.disabled = true;
+                feedback.textContent = 'Bir daha deneyelim.';
+            }
+        }
+
+        function nextQuestion() {
+            questionIndex++;
+            createQuestion();
+        }
+
+
+        const tracingCanvas = document.getElementById('tracing-canvas');
+        const tracingContext = tracingCanvas.getContext('2d');
+        let tracingActive = false;
+        let tracingNumber = 0;
+
+        function drawTracingTemplate() {
+            const ctx = tracingContext;
+            const w = tracingCanvas.width;
+            const h = tracingCanvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = '#fafcff';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.font = 'bold 290px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#a3afc2';
+            ctx.setLineDash([2, 11]);
+            ctx.lineCap = 'round';
+            ctx.strokeText(String(tracingNumber), w / 2, h / 2 + 12);
+            ctx.setLineDash([]);
+        }
+
+        function showTracing(number) {
+            tracingNumber = number;
+            tracingActive = false;
+            document.getElementById('tracing-panel').hidden = false;
+            drawTracingTemplate();
+        }
+
+        function clearTracing() {
+            tracingActive = false;
+            drawTracingTemplate();
+            document.getElementById('drawing-message').textContent = '';
+        }
+
+        function giveDrawingFeedback(success) {
+            const message = success
+                ? 'Şahane! Çok güzel çizdin!'
+                : 'Daha güzel çizebilirsin. Bir daha deneyelim!';
+
+            document.getElementById('drawing-message').textContent = message;
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+
+                const speech = new SpeechSynthesisUtterance(message);
+                speech.lang = 'tr-TR';
+                speech.rate = 0.85;
+                speech.pitch = 1.05;
+
+                window.speechSynthesis.speak(speech);
+            }
+        }
+
+        function tracingPosition(event) {
+            const rect = tracingCanvas.getBoundingClientRect();
+            return {
+                x: (event.clientX - rect.left) *
+                   tracingCanvas.width / rect.width,
+                y: (event.clientY - rect.top) *
+                   tracingCanvas.height / rect.height
+            };
+        }
+
+        tracingCanvas.addEventListener('pointerdown', event => {
+            if (document.getElementById('tracing-panel').hidden) return;
+            tracingActive = true;
+            tracingCanvas.setPointerCapture(event.pointerId);
+
+            const pos = tracingPosition(event);
+            tracingContext.beginPath();
+            tracingContext.moveTo(pos.x, pos.y);
+            tracingContext.strokeStyle = '#3459a6';
+            tracingContext.lineWidth = 9;
+            tracingContext.lineCap = 'round';
+            tracingContext.lineJoin = 'round';
+            tracingContext.setLineDash([]);
+        });
+
+        tracingCanvas.addEventListener('pointermove', event => {
+            if (!tracingActive) return;
+            const pos = tracingPosition(event);
+            tracingContext.lineTo(pos.x, pos.y);
+            tracingContext.stroke();
+        });
+
+        function stopTracing() {
+            tracingActive = false;
+        }
+
+        tracingCanvas.addEventListener('pointerup', stopTracing);
+        tracingCanvas.addEventListener('pointercancel', stopTracing);
+        tracingCanvas.addEventListener('lostpointercapture', stopTracing);
+
+
+        const savedActivityId = params.get("activity_id");
+        const teacherPreviewMode =
+            params.get("preview") === "1" || Boolean(savedActivityId);
+        let teacherPreviewDraft = null;
+
+
+        function clearQuantityAnimation() {
+            cards.querySelectorAll(".correct-answer-animation").forEach(
+                element => element.classList.remove("correct-answer-animation")
+            );
+        }
+
+        function animateCorrectAnswer(button) {
+            clearQuantityAnimation();
+            button.classList.remove("correct-answer-animation");
+            void button.offsetWidth;
+            button.classList.add("correct-answer-animation");
+        }
+
+        function showTeacherQuestion() {
+            clearQuantityAnimation();
+            const draft = teacherPreviewDraft;
+            const nextButton = document.querySelector(
+                '[onclick="nextQuestion()"]'
+            );
+
+            answered = false;
+            nextButton.hidden = true;
+            feedback.textContent = "";
+            cards.replaceChildren();
+
+            // Apply the teacher-selected visual layout.
+            const allowedLayouts = [
+                "balloons",
+                "flower_petals",
+                "object_cards"
+            ];
+
+            cards.classList.remove(
+                "layout-balloons",
+                "layout-flower_petals",
+                "layout-object_cards"
+            );
+
+            if (allowedLayouts.includes(draft.layout_id)) {
+                cards.classList.add("layout-" + draft.layout_id);
+            }
+
+            document.getElementById("tracing-panel").hidden = true;
+
+            target = questionIndex === 0
+                ? draft.target_digit
+                : (draft.target_digit + questionIndex) % 10;
+
+            instruction.textContent = target + " rakamını göster.";
+
+            let choices;
+
+            if (questionIndex === 0) {
+                choices = [...draft.options];
+            } else {
+                const pool = Array.from(
+                    {length: 10}, (_, i) => i
+                ).filter(n => n !== target);
+
+                for (let i = pool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [pool[i], pool[j]] = [pool[j], pool[i]];
+                }
+
+                choices = [
+                    target,
+                    ...pool.slice(0, draft.options.length - 1)
+                ];
+
+                for (let i = choices.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [choices[i], choices[j]] =
+                        [choices[j], choices[i]];
+                }
+            }
+
+            for (const number of choices) {
+                const button = document.createElement("button");
+                button.className = "number-card";
+
+                if (draft.layout_id === "object_cards") {
+                    const allowedObjects = [
+                        "pencil",
+                        "basketball",
+                        "soccer_ball"
+                    ];
+
+                    const selectedObject =
+                        allowedObjects.includes(draft.visual_id)
+                            ? draft.visual_id
+                            : "pencil";
+
+                    const image = document.createElement("img");
+
+                    if (
+                        typeof draft.visual_id === "string" &&
+                        /^photo:[0-9a-f]{32}$/.test(draft.visual_id)
+                    ) {
+                        const photoId = draft.visual_id.slice(6);
+                        image.src = "/visual-library/photo/" + photoId;
+                    } else {
+                        image.src = "/visual-library/svg/" +
+                            selectedObject + ".svg";
+                    }
+                    image.alt = "";
+                    image.setAttribute("aria-hidden", "true");
+
+                    const digit = document.createElement("span");
+                    digit.textContent = number;
+
+                    button.append(image, digit);
+                    button.setAttribute("aria-label", String(number));
+                } else {
+                    button.textContent = number;
+                }
+
+                button.addEventListener("click", () => {
+                    if (answered) return;
+
+                    if (number === target) {
+                        answered = true;
+                        button.classList.add("correct");
+                        feedback.textContent = "Doğru! Aferin.";
+
+                        cards.querySelectorAll("button")
+                            .forEach(b => b.disabled = true);
+
+                        nextButton.hidden = false;
+                        if (draft.quantity_animation_enabled === true) {
+                            animateCorrectAnswer(button);
+                        }
+                    } else {
+                        feedback.textContent = "Bir daha deneyelim.";
+                    }
+                });
+
+                cards.appendChild(button);
+            }
+        }
+
+        async function startTeacherPreview() {
+            const nextButton = document.querySelector(
+                '[onclick="nextQuestion()"]'
+            );
+
+            nextButton.hidden = true;
+
+            let draft;
+
+            try {
+                if (savedActivityId) {
+                    const response = await fetch(
+                        "/api/student-activities/" +
+                        encodeURIComponent(savedActivityId)
+                    );
+                    const result = await response.json();
+
+                    if (!response.ok || !result.ok) {
+                        throw new Error(
+                            result.error || "Etkinlik yüklenemedi."
+                        );
+                    }
+
+                    draft = result.activity.config;
+                } else {
+                    const raw = sessionStorage.getItem(
+                        "studentActivityPreview"
+                    );
+                    draft = raw ? JSON.parse(raw) : null;
+                }
+            } catch (error) {
+                draft = null;
+                feedback.textContent = error.message;
+            }
+
+            const valid = draft &&
+                Number.isInteger(draft.target_digit) &&
+                draft.target_digit >= 0 &&
+                draft.target_digit <= 9 &&
+                Array.isArray(draft.options) &&
+                draft.options.length >= 2 &&
+                draft.options.length <= 10 &&
+                draft.options.every(n =>
+                    Number.isInteger(n) && n >= 0 && n <= 9
+                ) &&
+                new Set(draft.options).size === draft.options.length &&
+                draft.options.includes(draft.target_digit);
+
+            if (!valid) {
+                instruction.textContent =
+                    "Geçerli bir öğretmen önizlemesi bulunamadı.";
+                cards.replaceChildren();
+                feedback.textContent =
+                    "Etkinlik tasarımcısına dönerek yeniden deneyiniz.";
+                return;
+            }
+
+            teacherPreviewDraft = draft;
+            questionIndex = 0;
+
+            nextButton.onclick = () => {
+                if (!answered) return;
+                questionIndex++;
+                showTeacherQuestion();
+            };
+
+            showTeacherQuestion();
+        }
+
+        if (teacherPreviewMode) {
+            startTeacherPreview();
+        } else {
+            createQuestion();
+        }
+    </script>
+
+</body>
+</html>
+
+<style>
+/* Step 39B.8 — Larger visual objects in number cards */
+.cards.layout-object_cards .number-card {
+    height: 255px;
+    padding: 12px;
+    gap: 10px;
+}
+
+.cards.layout-object_cards .number-card img {
+    width: 145px;
+    height: 145px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.cards.layout-object_cards .number-card span {
+    font-size: 52px;
+}
+</style>

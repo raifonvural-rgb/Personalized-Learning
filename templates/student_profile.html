@@ -1,0 +1,229 @@
+<!-- Öğrenci profili seçim paneli -->
+
+<section class="profile-selection-panel"
+         aria-labelledby="profile-selection-title">
+
+    <div class="profile-selection-header">
+        <div class="profile-selection-icon"
+             aria-hidden="true">
+            <svg viewBox="0 0 24 24"
+                 fill="none"
+                 stroke="currentColor"
+                 stroke-width="1.7">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21v-2a8 8 0 0 1 16 0v2"/>
+            </svg>
+        </div>
+
+        <div>
+            <h2 id="profile-selection-title">
+                Öğrenci Profili Tanımla
+            </h2>
+
+            <p>
+                Yeni bir öğrenci profili oluşturun veya
+                kayıtlı bir öğrencinin bireysel özelliklerini
+                görüntüleyin ve düzenleyin.
+            </p>
+        </div>
+    </div>
+
+    <div class="profile-selection-controls">
+
+        <label for="profile-student-select">
+            Öğrenci seçiniz
+        </label>
+
+        <div class="profile-selection-row">
+
+            <select id="profile-student-select">
+                <option value="">
+                    Yeni Öğrenci
+                </option>
+            </select>
+
+            <button type="button"
+                    id="profile-open-button"
+                    class="profile-primary-button">
+                Profili Aç
+            </button>
+
+        </div>
+
+        <div id="profile-selection-status"
+             class="profile-selection-status"
+             role="status"
+             aria-live="polite">
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- Öğrenci profili düzenleme penceresi -->
+
+<dialog id="student-profile-dialog"
+        class="student-profile-dialog"
+        aria-labelledby="profile-dialog-title">
+
+    <div class="profile-dialog-shell">
+
+        <!-- Pencere başlığı -->
+
+        <header class="profile-dialog-header">
+
+            <div class="profile-dialog-heading">
+
+                <div class="profile-dialog-eyebrow">
+                    BİREYSEL ÖĞRENME GEREKSİNİMLERİ
+                </div>
+
+                <h2 id="profile-dialog-title">
+                    Öğrenci Profili
+                </h2>
+
+                <p id="profile-dialog-subtitle">
+                    Yeni Öğrenci
+                </p>
+
+            </div>
+
+            <button type="button"
+                    id="profile-close-button"
+                    class="profile-close-button"
+                    aria-label="Pencereyi kapat">
+                &times;
+            </button>
+
+        </header>
+
+
+        <!-- Ana düzenleme alanı -->
+
+        <form id="student-profile-form"
+              class="student-profile-form"
+              novalidate>
+
+            <div class="profile-dialog-body">
+
+                <!-- Sol gezinme menüsü -->
+
+                <aside class="profile-sidebar">
+
+                    <div class="profile-sidebar-title">
+                        PROFİL BÖLÜMLERİ
+                    </div>
+
+                    <nav id="profile-section-navigation"
+                         aria-label="Öğrenci profili bölümleri">
+
+                        <!-- Bölümler JavaScript tarafından oluşturulur. -->
+
+                    </nav>
+
+                    <div class="profile-sidebar-note">
+
+                        <strong>
+                            Bireyselleştirilmiş Profil
+                        </strong>
+
+                        <p>
+                            Yalnızca öğrenci hakkında
+                            bildiğiniz özellikleri tanımlayın.
+                            Bilmediğiniz alanları boş bırakabilirsiniz.
+                        </p>
+
+                    </div>
+
+                </aside>
+
+
+                <!-- Sağ düzenlenebilir içerik alanı -->
+
+                <section class="profile-content">
+
+                    <div class="profile-content-header">
+
+                        <div id="profile-section-counter"
+                             class="profile-section-counter">
+                            Bölümler yükleniyor...
+                        </div>
+
+                        <h3 id="profile-section-title">
+                            Genel Bilgiler
+                        </h3>
+
+                        <p id="profile-section-description">
+                            Öğrencinin genel özelliklerini tanımlayın.
+                        </p>
+
+                    </div>
+
+                    <div id="profile-fields"
+                         class="profile-fields">
+
+                        <!-- Profil alanları merkezi şemadan oluşturulur. -->
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- Pencere alt işlem çubuğu -->
+
+            <footer class="profile-dialog-footer">
+
+                <div class="profile-footer-information">
+
+                    <div id="profile-save-status"
+                         class="profile-save-status"
+                         role="status"
+                         aria-live="polite">
+                    </div>
+
+                    <div class="profile-required-note">
+                        * Yalnızca öğrenci adı zorunludur.
+                    </div>
+
+                </div>
+
+                <div class="profile-footer-actions">
+
+                    <button type="button"
+                            id="profile-cancel-button"
+                            class="profile-secondary-button">
+                        İptal
+                    </button>
+
+                    <button type="submit"
+                            id="profile-save-button"
+                            class="profile-primary-button">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="1.8"
+                             aria-hidden="true">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5
+                                     a2 2 0 0 1 2-2h12l4 4v12
+                                     a2 2 0 0 1-2 2z"/>
+                            <path d="M7 3v6h10V3"/>
+                            <path d="M7 21v-8h10v8"/>
+                        </svg>
+
+                        Değişiklikleri Kaydet
+
+                    </button>
+
+                </div>
+
+            </footer>
+
+        </form>
+
+    </div>
+
+</dialog>

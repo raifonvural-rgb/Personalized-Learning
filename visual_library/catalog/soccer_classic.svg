@@ -1,0 +1,75 @@
+<svg
+xmlns="http://www.w3.org/2000/svg"
+width="240"
+height="240"
+viewBox="0 0 200 200"
+role="img"
+aria-label="Futbol topu">
+
+<defs>
+    <clipPath id="soccer-ball-clip">
+        <circle cx="100" cy="100" r="85"/>
+    </clipPath>
+</defs>
+
+<!-- Ana top yüzeyi -->
+<circle
+cx="100"
+cy="100"
+r="85"
+fill="#FFFFFF"
+stroke="#303030"
+stroke-width="3"/>
+
+<!-- Panel çizgileri -->
+<g
+clip-path="url(#soccer-ball-clip)"
+stroke="#303030"
+stroke-width="3"
+stroke-linejoin="round">
+
+<!-- Merkez beşgen -->
+<path
+d="M100 64L135 89L122 130L78 130L65 89Z"
+fill="#303030"/>
+
+<!-- Alt panel -->
+<path
+d="M78 130L55 151L72 190L111 193L122 130"
+fill="#FFFFFF"/>
+
+<!-- Sağ panel -->
+<path
+d="M135 89L165 73L193 104L170 144L122 130"
+fill="#FFFFFF"/>
+
+<!-- Sol panel -->
+<path
+d="M65 89L34 73L8 104L31 144L78 130"
+fill="#FFFFFF"/>
+
+<!-- Üst sağ panel -->
+<path
+d="M100 64L100 27L139 6L165 73L135 89"
+fill="#FFFFFF"/>
+
+<!-- Üst sol panel -->
+<path
+d="M100 64L100 27L61 6L34 73L65 89"
+fill="#FFFFFF"/>
+
+<!-- Kenar panelleri -->
+<path
+d="M100 27L83 -7L117 -7Z"
+fill="#303030"/>
+
+<path
+d="M31 144L9 164L45 193L72 190Z"
+fill="#303030"/>
+
+<path
+d="M170 144L191 164L155 193L111 193Z"
+fill="#303030"/>
+
+</g>
+</svg>

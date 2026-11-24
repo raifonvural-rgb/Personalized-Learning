@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etkinlik Tasarımcısı</title>
+<style>
+:root {
+    --navy:#243653;
+    --blue:#4169b2;
+    --background:#f4f6fa;
+    --border:#e0e6ef;
+    --muted:#64748b;
+}
+* { box-sizing:border-box; }
+body {
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:var(--background);
+    color:var(--navy);
+}
+header {
+    background:white;
+    border-bottom:1px solid var(--border);
+    padding:22px 6%;
+}
+.brand { font-size:22px; font-weight:bold; }
+.subtitle { color:var(--muted); margin-top:7px; font-size:14px; }
+main { max-width:1150px; margin:35px auto; padding:0 25px; }
+.panel {
+    background:white;
+    border:1px solid var(--border);
+    border-radius:18px;
+    padding:26px;
+    margin-bottom:22px;
+}
+h1 { margin-top:0; }
+h2 { font-size:20px; margin-top:0; }
+p { line-height:1.6; }
+.muted { color:var(--muted); }
+.grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+}
+label { display:block; font-weight:bold; margin-bottom:8px; }
+input,select {
+    width:100%;
+    padding:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:16px;
+    background:white;
+}
+button,.button {
+    display:inline-block;
+    padding:12px 18px;
+    border:0;
+    border-radius:10px;
+    background:var(--blue);
+    color:white;
+    font-size:15px;
+    font-weight:bold;
+    cursor:pointer;
+    text-decoration:none;
+}
+button.secondary { background:#eaf0fa; color:var(--navy); }
+.actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+.preview {
+    min-height:230px;
+    padding:28px;
+    background:#f8faff;
+    border:2px dashed #cbd7ea;
+    border-radius:16px;
+    text-align:center;
+}
+.options {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:16px;
+    margin-top:25px;
+}
+.option {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:92px;
+    height:92px;
+    font-size:34px;
+    font-weight:bold;
+    border:2px solid #9fb4d7;
+    border-radius:18px;
+    background:white;
+}
+.option.balloons { border-radius:50% 50% 45% 45%; background:#dceaff; }
+.option.flower_petals { border-radius:50% 15% 50% 15%; background:#fce3f0; }
+.option.object_cards {
+    border-radius:14px;
+    background:#e8f3e8;
+    width:125px;
+    height:145px;
+    flex-direction:column;
+    gap:8px;
+}
+.option.object_cards img {
+    width:76px;
+    height:76px;
+    object-fit:contain;
+}
+.option.object_cards .digit-label {
+    font-size:30px;
+    font-weight:bold;
+}
+.notice { font-size:14px; color:var(--muted); }
+.error { color:#b42318; font-weight:bold; }
+</style>
+</head>
+<body>
+<header>
+    <div class="brand">Bireyselleştirilmiş Öğrenme Materyalleri</div>
+    <div class="subtitle">Öğretmen Kontrollü Etkinlik Tasarımcısı</div>
+</header>
+
+<main>
+    <section class="panel">
+        <h1>Etkinlik Tasarla</h1>
+        <p class="muted">
+            Kazanım: <strong>{{ achievement_code }}</strong> —
+            Rakamları gösterir
+        </p>
+        <p>
+            Aktif öğrenci:
+            <strong>{{ active_student.name }}</strong>
+        </p>
+        <p class="notice">
+            Bu ekran taslak önizlemesidir. Öğrenciye etkinlik atanmaz.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>1. Etkinlik Ayarları</h2>
+        <div class="grid">
+            <div>
+                <label for="targetDigit">Hedef rakam</label>
+                <select id="targetDigit">
+                    {% for digit in range(10) %}
+                    <option value="{{ digit }}" {% if digit == 3 %}selected{% endif %}>
+                        {{ digit }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="layout">Görsel düzen</label>
+                <select id="layout">
+                    {% for layout_id, layout in layouts.items() %}
+                    <option value="{{ layout_id }}">
+                        {{ layout.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="visualObjectField" hidden>
+                <label for="visualObject">Görsel nesne</label>
+                <select id="visualObject">
+                    <option value="">Nesne seçiniz</option>
+                    {% for object_id, item in visual_objects.items() %}
+                    <option value="{{ object_id }}"
+                            data-image-url="{{ item.image_url }}">
+                        {{ item.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <label for="optionsInput">Rakam seçenekleri</label>
+                <input id="optionsInput" value="2,3,5,8"
+                       placeholder="Örneğin: 2,3,5,8">
+            </div>
+        </div>
+
+        <div style="margin-top:20px">
+            <label style="display:flex;align-items:center;gap:10px">
+                <input type="checkbox" id="quantityAnimationEnabled"
+                       style="width:auto" checked>
+                Doğru yanıttan sonra animasyon çalışır
+            </label>
+        </div>
+        <div class="actions">
+            <button type="button" onclick="generateOptions()">
+                Yeni Seçenekler Üret
+            </button>
+            <button type="button" class="secondary" onclick="renderPreview()">
+                Önizlemeyi Güncelle
+            </button>
+        </div>
+        <p id="message" role="status" aria-live="polite"></p>
+        <div class="actions">
+            <button type="button" id="tryStudentButton"
+                    hidden disabled>
+                Öğrenci Ekranında Dene
+            </button>
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>2. Öğrenci Ekranı Önizlemesi</h2>
+        <div class="preview">
+            <h2 id="previewTitle">3 rakamını bul</h2>
+            <div class="options" id="previewOptions"></div>
+        </div>
+        <p class="notice">
+            Bu önizleme henüz gerçek öğrenci etkinliği değildir.
+            Nesne kartları için görsel kütüphane bağlantısı sonraki
+            aşamada yapılacaktır.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>3. Öğretmen Kontrolü</h2>
+        <p>
+            Durum: <strong id="activityStatus">Taslak — onaylanmadı</strong>
+        </p>
+        <div class="actions">
+            <button type="button" id="saveActivity" onclick="saveActivity()">
+                Taslağı Kaydet
+            </button>
+            <button type="button" id="validateActivity"
+                    onclick="validateActivity()" disabled>
+                Uygunluğu Kontrol Et
+            </button>
+            <button type="button" id="approveActivity"
+                    onclick="approveActivity()" disabled>
+                Öğretmen Onayı
+            </button>
+            <button type="button" id="openActivity"
+                    onclick="openActivity()" disabled>
+                Öğrenci Ekranında Aç
+            </button>
+        </div>
+        <div id="validationResults" aria-live="polite"></div>
+        <label id="acknowledgementField" hidden>
+            <input type="checkbox" id="acknowledgeIssues"
+                   style="width:auto">
+            Uyarıları ve öğretmen incelemesi gerektiren maddeleri
+            değerlendirdim.
+        </label>
+        <p id="workflowMessage" role="status" aria-live="polite"></p>
+        <p class="muted">
+            Öğrenciye özgü uygunluk kontrolü ve öğretmen onayı
+            tamamlanmadan etkinlik kullanıma açılmayacaktır.
+        </p>
+        <a class="button" href="{{ url_for('achievements') }}">
+            Kazanımlara Dön
+        </a>
+    </section>
+
+    <section class="panel">
+        <h2>4. Kaydedilmiş Etkinlikler</h2>
+        <p class="muted">
+            Aktif öğrenci için kaydedilmiş etkinlikler.
+            Yalnızca onaylanan etkinlikler açılabilir.
+        </p>
+        <div id="savedActivitiesList" aria-live="polite">
+            Etkinlikler yükleniyor...
+        </div>
+        <div class="actions">
+            <button type="button" class="secondary"
+                    onclick="loadSavedActivities()">
+                Listeyi Yenile
+            </button>
+        </div>
+    </section>
+
+</main>
+
+<script>
+
+let validatedStudentDraft = null;
+
+const tryStudentButton =
+    document.getElementById("tryStudentButton");
+
+tryStudentButton.addEventListener("click", () => {
+    if (!validatedStudentDraft) return;
+
+    sessionStorage.setItem(
+        "studentActivityPreview",
+        JSON.stringify(validatedStudentDraft)
+    );
+
+    window.location.href = "/student?preview=1";
+});
+
+function updateVisualObjectField() {
+    const layout = document.getElementById("layout").value;
+    const field = document.getElementById("visualObjectField");
+    field.hidden = layout !== "object_cards";
+}
+
+document.getElementById("layout").addEventListener(
+    "change",
+    updateVisualObjectField
+);
+document.addEventListener(
+    "DOMContentLoaded",
+    updateVisualObjectField
+);
+
+function readOptions() {
+    const raw = document.getElementById("optionsInput").value;
+    const parts = raw.split(",").map(x => x.trim());
+    const target = Number(document.getElementById("targetDigit").value);
+
+    if (parts.length < 2 || parts.length > 10 ||
+        parts.some(x => !/^[0-9]$/.test(x))) {
+        throw new Error("2 ile 10 arasında, virgülle ayrılmış rakam giriniz.");
+    }
+
+    const options = parts.map(Number);
+
+    if (new Set(options).size !== options.length) {
+        throw new Error("Rakam seçenekleri tekrar edemez.");
+    }
+
+    if (!options.includes(target)) {
+        throw new Error("Hedef rakam seçenekler arasında bulunmalıdır.");
+    }
+
+    return options;
+}
+
+async function renderPreview() {
+    const message = document.getElementById("message");
+    const container = document.getElementById("previewOptions");
+
+    message.textContent = "Taslak doğrulanıyor...";
+    message.className = "";
+    container.replaceChildren();
+    validatedStudentDraft = null;
+    resetActivityWorkflow();
+    tryStudentButton.hidden = true;
+    tryStudentButton.disabled = true;
+
+    try {
+        const options = readOptions();
+        const target = Number(document.getElementById("targetDigit").value);
+        const layout = document.getElementById("layout").value;
+
+        const payload = {
+            target_digit: target,
+            layout_id: layout,
+            visual_id: layout === "object_cards"
+                ? document.getElementById("visualObject").value || null
+                : null,
+            options: options,
+            quantity_animation_enabled:
+                document.getElementById("quantityAnimationEnabled").checked
+        };
+
+        const response = await fetch("/api/activity-draft", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+            throw new Error(result.error || "Taslak doğrulanamadı.");
+        }
+
+        const draft = result.draft;
+
+        validatedStudentDraft = draft;
+        resetActivityWorkflow();
+        tryStudentButton.hidden = false;
+        tryStudentButton.disabled = false;
+
+        document.getElementById("previewTitle").textContent =
+            draft.target_digit + " rakamını bul";
+
+        for (const digit of draft.options) {
+            const item = document.createElement("div");
+            item.className = "option " + draft.layout_id;
+
+            if (draft.layout_id === "object_cards") {
+                const selected = document.querySelector(
+                    '#visualObject option[value="' + draft.visual_id + '"]'
+                );
+
+                if (!selected || !selected.dataset.imageUrl) {
+                    throw new Error("Seçilen görsel nesne bulunamadı.");
+                }
+
+                const image = document.createElement("img");
+                image.src = selected.dataset.imageUrl;
+                image.alt = selected.textContent.trim();
+
+                const label = document.createElement("span");
+                label.className = "digit-label";
+                label.textContent = digit;
+
+                item.appendChild(image);
+                item.appendChild(label);
+            } else {
+                item.textContent = digit;
+            }
+
+            container.appendChild(item);
+        }
+
+        message.textContent =
+            "Sunucu doğrulaması başarılı. Taslak öğretmen onayı bekliyor.";
+
+    } catch (error) {
+        container.replaceChildren();
+        validatedStudentDraft = null;
+        tryStudentButton.hidden = true;
+        tryStudentButton.disabled = true;
+        message.textContent = error.message;
+        message.className = "error";
+    }
+}
+
+
+let savedActivityId = null;
+let activityApproved = false;
+
+function workflowMessage(message, error=false) {
+    const el = document.getElementById("workflowMessage");
+    el.textContent = message;
+    el.className = error ? "error" : "notice";
+}
+
+function resetActivityWorkflow() {
+    savedActivityId = null;
+    activityApproved = false;
+    document.getElementById("saveActivity").disabled =
+        !validatedStudentDraft;
+    document.getElementById("validateActivity").disabled = true;
+    document.getElementById("approveActivity").disabled = true;
+    document.getElementById("openActivity").disabled = true;
+    document.getElementById("activityStatus").textContent =
+        "Taslak — onaylanmadı";
+    document.getElementById("validationResults").replaceChildren();
+    document.getElementById("acknowledgementField").hidden = true;
+    document.getElementById("acknowledgeIssues").checked = false;
+    workflowMessage("");
+}
+
+async function workflowRequest(url, payload) {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+        throw new Error(result.error || "İşlem başarısız.");
+    }
+    return result.activity;
+}
+
+async function saveActivity() {
+    if (!validatedStudentDraft) return;
+    document.getElementById("saveActivity").disabled = true;
+    try {
+        const activity = await workflowRequest(
+            "/api/student-activities",
+            {draft: validatedStudentDraft}
+        );
+        savedActivityId = activity.id;
+        document.getElementById("validateActivity").disabled = false;
+        document.getElementById("activityStatus").textContent =
+            "Kaydedildi — doğrulama bekliyor";
+        workflowMessage("Taslak kaydedildi.");
+        loadSavedActivities();
+    } catch (e) {
+        document.getElementById("saveActivity").disabled = false;
+        workflowMessage(e.message, true);
+    }
+}
+
+async function validateActivity() {
+    if (!savedActivityId) return;
+    document.getElementById("validateActivity").disabled = true;
+    try {
+        const activity = await workflowRequest(
+            "/api/student-activities/" + savedActivityId + "/validate",
+            {}
+        );
+        const result = activity.validation.result;
+        const container = document.getElementById("validationResults");
+        container.replaceChildren();
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Öğrenciye Özgü Uygunluk Kontrolü";
+        container.appendChild(heading);
+
+        for (const check of result.checks) {
+            const line = document.createElement("p");
+            line.textContent =
+                "[" + check.status.toUpperCase() + "] " + check.message;
+            container.appendChild(line);
+        }
+
+        const issues = result.checks.some(
+            c => c.status === "warning" || c.status === "review"
+        );
+        document.getElementById("acknowledgementField").hidden = !issues;
+        document.getElementById("approveActivity").disabled = false;
+        document.getElementById("activityStatus").textContent =
+            "Doğrulandı — öğretmen onayı bekliyor";
+        workflowMessage("Doğrulama tamamlandı. Sonuçları inceleyiniz.");
+    } catch (e) {
+        document.getElementById("validateActivity").disabled = false;
+        workflowMessage(e.message, true);
+    }
+}
+
+async function approveActivity() {
+    if (!savedActivityId) return;
+    const field = document.getElementById("acknowledgementField");
+    const acknowledged = document.getElementById("acknowledgeIssues").checked;
+
+    if (!field.hidden && !acknowledged) {
+        workflowMessage("Önce inceleme maddelerini onaylayınız.", true);
+        return;
+    }
+
+    document.getElementById("approveActivity").disabled = true;
+    try {
+        await workflowRequest(
+            "/api/student-activities/" + savedActivityId + "/approve",
+            {acknowledge_issues: acknowledged}
+        );
+        activityApproved = true;
+        document.getElementById("openActivity").disabled = false;
+        document.getElementById("activityStatus").textContent = "Onaylandı";
+        workflowMessage("Etkinlik öğretmen tarafından onaylandı.");
+        loadSavedActivities();
+    } catch (e) {
+        document.getElementById("approveActivity").disabled = false;
+        workflowMessage(e.message, true);
+    }
+}
+
+async function openActivity() {
+    if (!savedActivityId || !activityApproved) return;
+    try {
+        const response = await fetch(
+            "/api/student-activities/" + savedActivityId
+        );
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+            throw new Error(result.error || "Etkinlik açılamadı.");
+        }
+        window.location.href = "/student?activity_id=" +
+            encodeURIComponent(savedActivityId);
+    } catch (e) {
+        workflowMessage(e.message, true);
+    }
+}
+
+
+async function loadSavedActivities() {
+    const container = document.getElementById("savedActivitiesList");
+    container.textContent = "Etkinlikler yükleniyor...";
+
+    try {
+        const response = await fetch("/api/student-activities");
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+            throw new Error(result.error || "Etkinlikler yüklenemedi.");
+        }
+
+        container.replaceChildren();
+
+        if (!result.activities.length) {
+            container.textContent = "Henüz kaydedilmiş etkinlik yok.";
+            return;
+        }
+
+        for (const activity of result.activities) {
+            const row = document.createElement("div");
+            row.style.cssText =
+                "padding:14px 0;border-bottom:1px solid #e0e6ef;" +
+                "display:flex;align-items:center;justify-content:" +
+                "space-between;gap:12px;flex-wrap:wrap;";
+
+            const info = document.createElement("span");
+            const digit = activity.config.target_digit;
+            const status = activity.status === "approved"
+                ? "Onaylandı" : "Taslak";
+
+            info.textContent =
+                "MAT1.1.1 — Rakam " + digit + " — " + status;
+
+            row.appendChild(info);
+
+            if (activity.status === "approved") {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = "Aç";
+                button.addEventListener("click", () => {
+                    window.location.href =
+                        "/student?activity_id=" +
+                        encodeURIComponent(activity.id);
+                });
+                row.appendChild(button);
+            }
+
+            container.appendChild(row);
+        }
+    } catch (error) {
+        container.textContent = error.message;
+        container.className = "error";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadSavedActivities);
+
+function generateOptions() {
+    const target = Number(document.getElementById("targetDigit").value);
+    const pool = Array.from({length:10}, (_,i) => i)
+        .filter(x => x !== target);
+
+    for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+
+    const options = [target, ...pool.slice(0,3)];
+
+    for (let i = options.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [options[i], options[j]] = [options[j], options[i]];
+    }
+
+    document.getElementById("optionsInput").value = options.join(",");
+    renderPreview();
+}
+
+document.addEventListener("DOMContentLoaded", renderPreview);
+</script>
+</body>
+</html>

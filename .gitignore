@@ -1,0 +1,60 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Credentials and application secrets
+.flask_secret_key
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+openai.env
+secrets.json
+
+# Private application runtime data
+/data/
+
+# Visual library runtime files
+/visual_library/uploads/
+/visual_library/pending/
+
+# Backups and archives
+*.bak
+*.bak*
+*.backup
+*.backup*
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.old
+
+# Databases and runtime files
+*.db
+*.sqlite
+*.sqlite3
+*.lock
+*.log
+*.pid
+
+# Development environments
+.idea/
+.vscode/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*~
