@@ -114,6 +114,66 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
 }
 .notice { font-size:14px; color:var(--muted); }
 .error { color:#b42318; font-weight:bold; }
+
+.quantity-group {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-width:75px;
+    min-height:75px;
+}
+
+.quantity-group img {
+    width:52px;
+    height:52px;
+    object-fit:contain;
+}
+
+.quantity-grid {
+    display:grid;
+    grid-template-columns:repeat(3, 52px);
+    justify-content:center;
+}
+
+.quantity-horizontal {
+    flex-direction:row;
+    flex-wrap:wrap;
+}
+
+.quantity-vertical {
+    flex-direction:column;
+}
+
+.quantity-choice {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-width:110px;
+    min-height:110px;
+    padding:15px;
+    border:2px solid #9fb4d7;
+    border-radius:16px;
+    background:white;
+}
+
+.quantity-numeral {
+    font-size:48px;
+    font-weight:bold;
+}
+
+#quantityQuestion {
+    display:flex;
+    justify-content:center;
+    margin:15px 0;
+}
+
+#quantityQuestion .quantity-group {
+    border:2px solid #9fb4d7;
+    border-radius:16px;
+    background:white;
+    padding:15px;
+}
 </style>
 </head>
 <body>
@@ -125,7 +185,7 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
 <main>
     <section class="panel">
         <h1>Etkinlik Tasarla</h1>
-        <p class="muted">
+        <p class="muted" id="learningObjective">
             Kazanım: <strong>{{ achievement_code }}</strong> —
             Rakamları gösterir
         </p>
@@ -140,6 +200,20 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
 
     <section class="panel">
         <h2>1. Etkinlik Ayarları</h2>
+
+        <div style="margin-bottom:22px">
+            <label for="activityType">Etkinlik türü</label>
+            <select id="activityType">
+                <option value="find_digit">Rakamı bul</option>
+                <option value="number_to_quantity">
+                    Rakamdan miktara
+                </option>
+                <option value="quantity_to_number">
+                    Miktardan rakama
+                </option>
+            </select>
+        </div>
+
         <div class="grid">
             <div>
                 <label for="targetDigit">Hedef rakam</label>
@@ -152,7 +226,7 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
                 </select>
             </div>
 
-            <div>
+            <div id="digitLayoutField">
                 <label for="layout">Görsel düzen</label>
                 <select id="layout">
                     {% for layout_id, layout in layouts.items() %}
@@ -180,6 +254,58 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
                 <label for="optionsInput">Rakam seçenekleri</label>
                 <input id="optionsInput" value="2,3,5,8"
                        placeholder="Örneğin: 2,3,5,8">
+            </div>
+        </div>
+
+        <div id="quantitySettings" hidden
+             style="margin-top:22px">
+
+            <div class="grid">
+                <div>
+                    <label for="minQuantity">En küçük miktar</label>
+                    <input type="number" id="minQuantity"
+                           min="0" max="8" value="0">
+                </div>
+
+                <div>
+                    <label for="maxQuantity">En büyük miktar</label>
+                    <input type="number" id="maxQuantity"
+                           min="1" max="9" value="9">
+                </div>
+
+                <div>
+                    <label for="quantityArrangement">
+                        Nesne yerleşimi
+                    </label>
+                    <select id="quantityArrangement">
+                        <option value="grid">Izgara</option>
+                        <option value="horizontal">Yatay</option>
+                        <option value="vertical">Dikey</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top:20px">
+                <label>
+                    <input type="checkbox"
+                           id="quantityAudioEnabled"
+                           style="width:auto" checked>
+                    Sesli yönerge
+                </label>
+
+                <label>
+                    <input type="checkbox"
+                           id="spokenCountingEnabled"
+                           style="width:auto">
+                    Doğru yanıttan sonra sesli sayma
+                </label>
+
+                <label>
+                    <input type="checkbox"
+                           id="quantityCelebrationEnabled"
+                           style="width:auto" checked>
+                    Başarı geri bildirimi
+                </label>
             </div>
         </div>
 
@@ -211,12 +337,13 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
         <h2>2. Öğrenci Ekranı Önizlemesi</h2>
         <div class="preview">
             <h2 id="previewTitle">3 rakamını bul</h2>
+            <div id="quantityQuestion"></div>
             <div class="options" id="previewOptions"></div>
         </div>
         <p class="notice">
-            Bu önizleme henüz gerçek öğrenci etkinliği değildir.
-            Nesne kartları için görsel kütüphane bağlantısı sonraki
-            aşamada yapılacaktır.
+            Bu önizleme sunucu tarafından oluşturulan etkinlik
+            taslağını gösterir. Öğrenciye sunulmadan önce
+            uygunluk kontrolü ve öğretmen onayı gereklidir.
         </p>
     </section>
 
@@ -296,20 +423,78 @@ tryStudentButton.addEventListener("click", () => {
     window.location.href = "/student?preview=1";
 });
 
+
+function isQuantityActivity() {
+    return document.getElementById("activityType").value
+        !== "find_digit";
+}
+
 function updateVisualObjectField() {
+    const quantity = isQuantityActivity();
     const layout = document.getElementById("layout").value;
-    const field = document.getElementById("visualObjectField");
-    field.hidden = layout !== "object_cards";
+
+    document.getElementById("visualObjectField").hidden =
+        !quantity && layout !== "object_cards";
+
+    document.getElementById("digitLayoutField").hidden =
+        quantity;
+
+    document.getElementById("quantitySettings").hidden =
+        !quantity;
+
+    const activityType =
+        document.getElementById("activityType").value;
+
+    const objectives = {
+        find_digit:
+            "Kazanım: MAT1.1.1 — Rakamları gösterir",
+        number_to_quantity:
+            "Öğrenme hedefi: Rakamı uygun nesne miktarıyla eşleştirir",
+        quantity_to_number:
+            "Öğrenme hedefi: Nesne miktarını uygun rakamla eşleştirir"
+    };
+
+    document.getElementById("learningObjective").textContent =
+        objectives[activityType];
+
+
+    document.querySelector('label[for="targetDigit"]').textContent =
+        quantity ? "Hedef miktar" : "Hedef rakam";
+
+    document.querySelector('label[for="optionsInput"]').textContent =
+        quantity ? "Miktar seçenekleri" : "Rakam seçenekleri";
 }
 
 document.getElementById("layout").addEventListener(
-    "change",
-    updateVisualObjectField
+    "change", updateVisualObjectField
 );
+
+document.getElementById("activityType").addEventListener(
+    "change", () => {
+        updateVisualObjectField();
+        renderPreview();
+    }
+);
+
 document.addEventListener(
-    "DOMContentLoaded",
-    updateVisualObjectField
+    "DOMContentLoaded", updateVisualObjectField
 );
+
+function readQuantityRange() {
+    const minInput = document.getElementById("minQuantity");
+    const maxInput = document.getElementById("maxQuantity");
+
+    const min = Number(minInput.value);
+    const max = Number(maxInput.value);
+
+    if (minInput.value === "" || maxInput.value === "" ||
+        !Number.isInteger(min) || !Number.isInteger(max) ||
+        min < 0 || max > 9 || min >= max) {
+        throw new Error("Geçerli bir miktar aralığı seçiniz.");
+    }
+
+    return {min, max};
+}
 
 function readOptions() {
     const raw = document.getElementById("optionsInput").value;
@@ -334,13 +519,107 @@ function readOptions() {
     return options;
 }
 
+
+function createQuantityGroup(group, arrangement) {
+    const container = document.createElement("div");
+
+    container.className =
+        "quantity-group quantity-" + arrangement;
+
+    for (const object of group.objects) {
+        const selected = Array.from(
+            document.getElementById("visualObject").options
+        ).find(option => option.value === object.visual_id);
+
+        if (!selected || !selected.dataset.imageUrl) {
+            throw new Error("Görsel nesne bulunamadı.");
+        }
+
+        const image = document.createElement("img");
+        image.src = selected.dataset.imageUrl;
+        image.alt = selected.textContent.trim();
+
+        container.appendChild(image);
+    }
+
+    return container;
+}
+
+function renderQuantityPreview(draft, container) {
+    const title = document.getElementById("previewTitle");
+    const question = document.getElementById("quantityQuestion");
+
+    if (draft.activity_type === "number_to_quantity") {
+        title.textContent =
+            "Hangi grupta bu kadar nesne var?";
+
+        const numeral = document.createElement("div");
+        numeral.className = "quantity-numeral";
+        numeral.textContent = draft.question.value;
+
+        question.appendChild(numeral);
+    } else {
+        title.textContent = "Kaç tane nesne var?";
+
+        question.appendChild(
+            createQuantityGroup(
+                draft.question, draft.arrangement
+            )
+        );
+    }
+
+    for (const choice of draft.answer_choices) {
+        const item = document.createElement("div");
+
+        item.className = "quantity-choice";
+
+        if (choice.type === "numeral") {
+            item.classList.add("quantity-numeral");
+            item.textContent = choice.value;
+        } else {
+            item.appendChild(
+                createQuantityGroup(
+                    choice, draft.arrangement
+                )
+            );
+        }
+
+        container.appendChild(item);
+    }
+}
+
+let previewGeneration = 0;
+
+function invalidatePreview() {
+    previewGeneration++;
+    validatedStudentDraft = null;
+
+    document.getElementById("previewOptions").replaceChildren();
+    document.getElementById("quantityQuestion").replaceChildren();
+
+    document.getElementById("previewTitle").textContent =
+        "Önizlemeyi güncelleyiniz";
+
+    tryStudentButton.hidden = true;
+    tryStudentButton.disabled = true;
+
+    resetActivityWorkflow();
+
+    const message = document.getElementById("message");
+    message.className = "notice";
+    message.textContent =
+        "Ayarlar değişti. Önizlemeyi yeniden oluşturunuz.";
+}
+
 async function renderPreview() {
+    const generation = ++previewGeneration;
     const message = document.getElementById("message");
     const container = document.getElementById("previewOptions");
 
     message.textContent = "Taslak doğrulanıyor...";
     message.className = "";
     container.replaceChildren();
+    document.getElementById("quantityQuestion").replaceChildren();
     validatedStudentDraft = null;
     resetActivityWorkflow();
     tryStudentButton.hidden = true;
@@ -351,7 +630,7 @@ async function renderPreview() {
         const target = Number(document.getElementById("targetDigit").value);
         const layout = document.getElementById("layout").value;
 
-        const payload = {
+        let payload = {
             target_digit: target,
             layout_id: layout,
             visual_id: layout === "object_cards"
@@ -361,6 +640,40 @@ async function renderPreview() {
             quantity_animation_enabled:
                 document.getElementById("quantityAnimationEnabled").checked
         };
+
+
+        if (isQuantityActivity()) {
+            const range = readQuantityRange();
+
+            payload = {
+                activity_type:
+                    document.getElementById("activityType").value,
+
+                target_quantity: target,
+
+                visual_id:
+                    document.getElementById("visualObject").value,
+
+                min_quantity: range.min,
+                max_quantity: range.max,
+                options: options,
+
+                arrangement:
+                    document.getElementById("quantityArrangement").value,
+
+                audio_enabled:
+                    document.getElementById("quantityAudioEnabled").checked,
+
+                spoken_counting_enabled:
+                    document.getElementById("spokenCountingEnabled").checked,
+
+                quantity_animation_enabled:
+                    document.getElementById("quantityAnimationEnabled").checked,
+
+                celebration_enabled:
+                    document.getElementById("quantityCelebrationEnabled").checked
+            };
+        }
 
         const response = await fetch("/api/activity-draft", {
             method: "POST",
@@ -376,7 +689,26 @@ async function renderPreview() {
             throw new Error(result.error || "Taslak doğrulanamadı.");
         }
 
+        if (generation !== previewGeneration) return;
+
         const draft = result.draft;
+
+
+        if (draft.activity_type !== "find_digit") {
+            renderQuantityPreview(draft, container);
+
+            validatedStudentDraft = draft;
+            resetActivityWorkflow();
+
+            tryStudentButton.hidden = false;
+            tryStudentButton.disabled = false;
+
+            message.textContent =
+                "Sunucu doğrulaması başarılı. " +
+                "Taslak öğretmen onayı bekliyor.";
+
+            return;
+        }
 
         validatedStudentDraft = draft;
         resetActivityWorkflow();
@@ -420,8 +752,12 @@ async function renderPreview() {
             "Sunucu doğrulaması başarılı. Taslak öğretmen onayı bekliyor.";
 
     } catch (error) {
+        if (generation !== previewGeneration) return;
+
         container.replaceChildren();
+        document.getElementById("quantityQuestion").replaceChildren();
         validatedStudentDraft = null;
+        resetActivityWorkflow();
         tryStudentButton.hidden = true;
         tryStudentButton.disabled = true;
         message.textContent = error.message;
@@ -601,8 +937,22 @@ async function loadSavedActivities() {
             const status = activity.status === "approved"
                 ? "Onaylandı" : "Taslak";
 
-            info.textContent =
-                "MAT1.1.1 — Rakam " + digit + " — " + status;
+            const type = activity.config.activity_type;
+
+            if (type === "number_to_quantity") {
+                info.textContent =
+                    "Rakamdan miktara — Hedef: " +
+                    activity.config.target_quantity +
+                    " — " + status;
+            } else if (type === "quantity_to_number") {
+                info.textContent =
+                    "Miktardan rakama — Hedef: " +
+                    activity.config.target_quantity +
+                    " — " + status;
+            } else {
+                info.textContent =
+                    "MAT1.1.1 — Rakam " + digit + " — " + status;
+            }
 
             row.appendChild(info);
 
@@ -630,8 +980,30 @@ document.addEventListener("DOMContentLoaded", loadSavedActivities);
 
 function generateOptions() {
     const target = Number(document.getElementById("targetDigit").value);
-    const pool = Array.from({length:10}, (_,i) => i)
-        .filter(x => x !== target);
+    let min = 0;
+    let max = 9;
+
+    if (isQuantityActivity()) {
+        try {
+            const range = readQuantityRange();
+            min = range.min;
+            max = range.max;
+
+            if (target < min || target > max) {
+                throw new Error("Hedef miktar seçilen aralığın dışında.");
+            }
+        } catch (error) {
+            const message = document.getElementById("message");
+            message.textContent = error.message;
+            message.className = "error";
+            return;
+        }
+    }
+
+    const pool = Array.from(
+        {length: max - min + 1},
+        (_, i) => min + i
+    ).filter(x => x !== target);
 
     for (let i = pool.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -647,6 +1019,29 @@ function generateOptions() {
 
     document.getElementById("optionsInput").value = options.join(",");
     renderPreview();
+}
+
+
+for (const id of [
+    "targetDigit",
+    "layout",
+    "visualObject",
+    "optionsInput",
+    "minQuantity",
+    "maxQuantity",
+    "quantityArrangement",
+    "quantityAudioEnabled",
+    "spokenCountingEnabled",
+    "quantityCelebrationEnabled",
+    "quantityAnimationEnabled"
+]) {
+    const control = document.getElementById(id);
+
+    control.addEventListener(
+        control.tagName === "INPUT" &&
+        control.type !== "checkbox" ? "input" : "change",
+        invalidatePreview
+    );
 }
 
 document.addEventListener("DOMContentLoaded", renderPreview);

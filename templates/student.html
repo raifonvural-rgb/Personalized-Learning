@@ -458,16 +458,178 @@
 }
 </style>
 
+
+<style>
+
+/* Quantity representation activities */
+
+.quantity-group img.counting-highlight {
+    outline: 4px solid #3459a6;
+    outline-offset: 5px;
+    border-radius: 8px;
+    background: #ffffff;
+    transform: scale(1.18);
+    position: relative;
+    z-index: 2;
+}
+
+.quantity-group img {
+    transition: transform 0.2s ease-in-out,
+                outline-color 0.15s,
+                background-color 0.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quantity-group img.counting-highlight {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .quantity-group img {
+        transition: none;
+    }
+}
+
+
+
+.quantity-mode .activity-layout {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.quantity-question {
+    display: flex;
+    justify-content: center;
+    margin: 25px auto;
+}
+
+.quantity-question[hidden] {
+    display: none;
+}
+
+.quantity-question .quantity-group {
+    background: white;
+    border: 3px solid var(--border);
+    border-radius: 24px;
+    padding: 22px;
+}
+
+.quantity-target {
+    font-size: clamp(65px, 10vw, 100px);
+    font-weight: bold;
+}
+
+.quantity-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.quantity-group img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+}
+
+.quantity-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 65px);
+    justify-content: center;
+}
+
+.quantity-horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.quantity-vertical {
+    flex-direction: column;
+}
+
+.cards.layout-quantity {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 20px;
+}
+
+.quantity-answer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 240px;
+    max-width: 340px;
+    min-height: 180px;
+    padding: 20px;
+    background: white;
+    border: 3px solid var(--border);
+    border-radius: 24px;
+    color: var(--text);
+    cursor: pointer;
+}
+
+.quantity-answer:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+}
+
+.quantity-answer:disabled {
+    cursor: default;
+}
+
+.quantity-answer.correct {
+    background: #e4f5e9;
+    border-color: #348b57;
+}
+
+.quantity-answer.incorrect {
+    background: #fff0ed;
+    border-color: #c16b5c;
+}
+
+.quantity-answer.numeral-answer {
+    flex: 0 1 140px;
+    min-height: 140px;
+    font-size: clamp(45px, 8vw, 75px);
+    font-weight: bold;
+}
+
+@media (max-width: 650px) {
+    .quantity-group img {
+        width: 45px;
+        height: 45px;
+    }
+
+    .quantity-grid {
+        grid-template-columns: repeat(3, 45px);
+    }
+
+    .quantity-answer {
+        flex-basis: 185px;
+        min-height: 140px;
+        padding: 12px;
+    }
+}
+
+</style>
+
 </head>
 <body>
     <main class="activity">
-        <div class="activity-label">MAT1.1.1 — Rakamları gösterir</div>
+        <div class="activity-label" id="activityLabel">MAT1.1.1 — Rakamları gösterir</div>
 
-        <h1>Rakamları Öğreniyorum</h1>
+        <h1 id="activityHeading">Rakamları Öğreniyorum</h1>
 
         <p class="instruction" id="instruction">
             5 rakamını göster.
         </p>
+
+        <div id="quantity-question"
+             class="quantity-question" hidden></div>
 
         <div class="activity-layout">
           <div class="selection-area">
@@ -550,6 +712,11 @@
         }
 
         function speakInstruction() {
+            if (isQuantityDraft(teacherPreviewDraft)) {
+                speakQuantityInstruction(teacherPreviewDraft);
+                return;
+            }
+
             if (!audioEnabled) return;
 
             if (!('speechSynthesis' in window)) {
@@ -874,12 +1041,346 @@
             }
         }
 
+
+        function isQuantityDraft(draft) {
+            return draft && [
+                "number_to_quantity",
+                "quantity_to_number"
+            ].includes(draft.activity_type);
+        }
+
+        function quantityAssetUrl(visualId) {
+            const allowedObjects = [
+                "pencil",
+                "basketball",
+                "soccer_ball"
+            ];
+
+            if (allowedObjects.includes(visualId)) {
+                return "/visual-library/svg/" +
+                    visualId + ".svg";
+            }
+
+            if (typeof visualId === "string" &&
+                /^photo:[0-9a-f]{32}$/.test(visualId)) {
+                return "/visual-library/photo/" +
+                    visualId.slice(6);
+            }
+
+            throw new Error("Geçersiz görsel nesne.");
+        }
+
+        function createStudentQuantityGroup(group, arrangement) {
+            const container = document.createElement("div");
+
+            container.className =
+                "quantity-group quantity-" + arrangement;
+
+            for (const object of group.objects) {
+                const image = document.createElement("img");
+
+                image.src = quantityAssetUrl(object.visual_id);
+                image.alt = "";
+                image.draggable = false;
+
+                image.addEventListener("error", () => {
+                    cards.querySelectorAll("button")
+                        .forEach(button => button.disabled = true);
+
+                    feedback.textContent =
+                        "Görsel yüklenemedi. Öğretmeninize bildiriniz.";
+                });
+
+                container.appendChild(image);
+            }
+
+            return container;
+        }
+
+        function showQuantityQuestion(draft) {
+            answered = false;
+            wrongAttempts = 0;
+
+            document.querySelector("main.activity")
+                .classList.add("quantity-mode");
+
+            document.getElementById("activityHeading")
+                .textContent = "Miktarları Öğreniyorum";
+
+            document.getElementById("activityLabel")
+                .textContent =
+                    draft.activity_type === "number_to_quantity"
+                        ? "Rakamdan miktara"
+                        : "Miktardan rakama";
+
+            document.getElementById("tracing-panel").hidden = true;
+
+            const nextButton = document.querySelector(
+                '[onclick="nextQuestion()"]'
+            );
+
+            nextButton.hidden = true;
+
+            listenButton.hidden =
+                draft.audio_enabled !== true;
+
+            listenButton.disabled = false;
+
+            feedback.textContent = "";
+
+            cards.className = "cards layout-quantity";
+            cards.replaceChildren();
+
+            const question =
+                document.getElementById("quantity-question");
+
+            question.hidden = false;
+            question.replaceChildren();
+
+            if (draft.activity_type === "number_to_quantity") {
+                instruction.textContent =
+                    "Hangi grupta bu kadar nesne var?";
+
+                const numeral = document.createElement("div");
+                numeral.className = "quantity-target";
+                numeral.textContent = draft.question.value;
+
+                question.appendChild(numeral);
+            } else {
+                instruction.textContent =
+                    "Kaç tane nesne var?";
+
+                question.appendChild(
+                    createStudentQuantityGroup(
+                        draft.question,
+                        draft.arrangement
+                    )
+                );
+            }
+
+            draft.answer_choices.forEach((choice, index) => {
+                const button = document.createElement("button");
+
+                button.type = "button";
+                button.className = "quantity-answer";
+
+                if (choice.type === "numeral") {
+                    button.classList.add("numeral-answer");
+                    button.textContent = choice.value;
+                } else {
+                    button.setAttribute(
+                        "aria-label",
+                        "Nesne grubu " + (index + 1)
+                    );
+
+                    button.appendChild(
+                        createStudentQuantityGroup(
+                            choice,
+                            draft.arrangement
+                        )
+                    );
+                }
+
+                button.addEventListener("click", () => {
+                    chooseQuantityAnswer(
+                        draft, index, button
+                    );
+                });
+
+                cards.appendChild(button);
+            });
+        }
+
+
+        const turkishNumbers = [
+            "Sıfır", "Bir", "İki", "Üç", "Dört",
+            "Beş", "Altı", "Yedi", "Sekiz", "Dokuz"
+        ];
+
+
+        function speakQuantityInstruction(draft) {
+            if (draft.audio_enabled !== true || answered) {
+                return;
+            }
+
+            if (!("speechSynthesis" in window)) {
+                feedback.textContent =
+                    "Sesli yönerge desteklenmiyor.";
+                return;
+            }
+
+            const message =
+                draft.activity_type === "number_to_quantity"
+                    ? turkishNumbers[draft.target_quantity] +
+                      " tane nesne olan grubu göster."
+                    : "Kaç tane nesne var? Doğru rakamı göster.";
+
+            window.speechSynthesis.cancel();
+
+            const speech =
+                new SpeechSynthesisUtterance(message);
+
+            speech.lang = "tr-TR";
+            speech.rate = 0.85;
+
+            window.speechSynthesis.speak(speech);
+        }
+
+        function countingDelay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function speakQuantityNumber(number) {
+            return new Promise(resolve => {
+                if (!("speechSynthesis" in window)) {
+                    resolve();
+                    return;
+                }
+
+                const speech = new SpeechSynthesisUtterance(
+                    turkishNumbers[number]
+                );
+
+                speech.lang = "tr-TR";
+                speech.rate = 0.8;
+
+                let timeout;
+
+                const finish = () => {
+                    clearTimeout(timeout);
+                    resolve();
+                };
+
+                speech.onend = finish;
+                speech.onerror = finish;
+
+                timeout = setTimeout(() => {
+                    window.speechSynthesis.cancel();
+                    finish();
+                }, 4000);
+
+                window.speechSynthesis.speak(speech);
+            });
+        }
+
+        async function reinforceQuantity(draft, button) {
+            const animate =
+                draft.quantity_animation_enabled === true;
+
+            const speak =
+                draft.spoken_counting_enabled === true;
+
+            if (!animate && !speak) return;
+
+            const group =
+                draft.activity_type === "number_to_quantity"
+                    ? button.querySelector(".quantity-group")
+                    : document.querySelector(
+                        "#quantity-question .quantity-group"
+                    );
+
+            if (!group) return;
+
+            const objects = Array.from(
+                group.querySelectorAll("img")
+            );
+
+            if (speak && "speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            // Zero is represented by an empty group.
+            if (objects.length === 0) {
+                if (speak) {
+                    await speakQuantityNumber(0);
+                }
+                return;
+            }
+
+            try {
+                for (let i = 0; i < objects.length; i++) {
+                    const object = objects[i];
+
+                    if (animate) {
+                        object.classList.add(
+                            "counting-highlight"
+                        );
+                    }
+
+                    if (speak) {
+                        await Promise.all([
+                            speakQuantityNumber(i + 1),
+                            countingDelay(700)
+                        ]);
+                    } else {
+                        await countingDelay(900);
+                    }
+
+                    object.classList.remove(
+                        "counting-highlight"
+                    );
+
+                    await countingDelay(200);
+                }
+            } finally {
+                objects.forEach(object =>
+                    object.classList.remove(
+                        "counting-highlight"
+                    )
+                );
+            }
+        }
+
+        function chooseQuantityAnswer(draft, index, button) {
+            if (answered || button.disabled) return;
+
+            if (index === draft.correct_index) {
+                answered = true;
+
+                button.classList.add("correct");
+
+                cards.querySelectorAll("button")
+                    .forEach(b => b.disabled = true);
+
+                feedback.textContent =
+                    draft.celebration_enabled
+                        ? "Doğru! Aferin."
+                        : "Doğru.";
+
+                listenButton.disabled = true;
+
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                }
+
+                reinforceQuantity(draft, button)
+                    .catch(error => {
+                        console.error(
+                            "Quantity reinforcement failed:",
+                            error
+                        );
+                    });
+
+            } else {
+                wrongAttempts++;
+
+                feedback.textContent =
+                    "Bir daha deneyelim.";
+            }
+        }
+
         async function startTeacherPreview() {
             const nextButton = document.querySelector(
                 '[onclick="nextQuestion()"]'
             );
 
             nextButton.hidden = true;
+
+            cards.replaceChildren();
+            listenButton.hidden = true;
+
+            instruction.textContent =
+                "Etkinlik yükleniyor...";
 
             let draft;
 
@@ -909,6 +1410,29 @@
                 feedback.textContent = error.message;
             }
 
+
+            if (isQuantityDraft(draft)) {
+                try {
+                    teacherPreviewDraft = draft;
+                    questionIndex = 0;
+
+                    showQuantityQuestion(draft);
+                } catch (error) {
+                    cards.replaceChildren();
+
+                    document.getElementById("quantity-question")
+                        .replaceChildren();
+
+                    instruction.textContent =
+                        "Etkinlik yüklenemedi.";
+
+                    feedback.textContent =
+                        "Öğretmeninize bildiriniz.";
+                }
+
+                return;
+            }
+
             const valid = draft &&
                 Number.isInteger(draft.target_digit) &&
                 draft.target_digit >= 0 &&
@@ -933,6 +1457,8 @@
 
             teacherPreviewDraft = draft;
             questionIndex = 0;
+
+            listenButton.hidden = !audioEnabled;
 
             nextButton.onclick = () => {
                 if (!answered) return;

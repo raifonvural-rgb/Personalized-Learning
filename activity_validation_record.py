@@ -7,7 +7,7 @@ Bu modül kalıcı kayıt oluşturmaz ve öğretmen onayı vermez.
 from datetime import datetime, timezone
 
 from activity_fingerprint import activity_hash, profile_hash
-from activity_validation import validate_activity_for_student
+from activity_validation_dispatcher import validate_activity_for_student
 
 
 def create_validation_record(draft, profile):

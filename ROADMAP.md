@@ -31,13 +31,14 @@ The following infrastructure has been established:
 - Image provenance and deduplication
 - External credential management
 
-GitHub integration is currently in progress.
+GitHub integration and quantity representation activities
+have been implemented.
 
 ## 3. Immediate Development Priorities
 
 ### RM-001 - GitHub Integration
 
-Status: In progress.
+Status: Completed.
 
 Objectives:
 
@@ -51,7 +52,7 @@ Objectives:
 
 ### RM-002 - Quantity Representation Activity
 
-Status: Planned.
+Status: Implemented; core functional verification completed.
 Development milestone: Step 41.
 
 Objectives:
@@ -425,19 +426,87 @@ Requirements:
 The current prototype must not be considered
 production-ready.
 
+
+### RM-025 - Student Learning Dashboard
+
+Status: Planned. Mandatory development milestone.
+
+Objectives:
+
+- Replace the standalone /student demonstration
+- Provide a personalized Student Learning Dashboard
+- Display assigned and approved activities
+- Support starting and continuing activities
+- Display completion status
+- Personalize dashboard presentation
+- Respect individual student requirements
+
+Planned routes:
+
+- /student
+- /student/activity/<activity_id>
+- /student/preview
+
+No separate demonstration route will be maintained.
+
+Dependencies: RM-021 and RM-026.
+
+See DD-028.
+
+### RM-026 - Teacher-Controlled Activity Assignment
+
+Status: Planned. Mandatory development milestone.
+
+Objectives:
+
+- Separate activity approval from assignment
+- Assign approved activities to individual students
+- Support assignment ordering
+- Support assignment withdrawal
+- Prevent unauthorized activity access
+- Track assignment completion status
+- Preserve teacher control over learning progression
+
+Teacher previews must not affect student performance
+or assignment completion records.
+
+See DD-029.
+
+### RM-027 - Continued Activity Suitability
+
+Status: Planned.
+
+Objectives:
+
+- Detect student profile changes after activity approval
+- Identify activities requiring revalidation
+- Detect missing visual asset files
+- Detect modifications to previously approved assets
+- Prevent delivery of invalid or unsuitable activities
+- Require renewed teacher review when necessary
+
+Existing launch-time integrity and asset approval
+checks provide an initial foundation.
+
 ## 12. Development Sequence
 
 Immediate sequence:
 
-1. Complete GitHub integration.
-2. Implement quantity representation activities.
-3. Review activity management and reuse requirements.
-4. Design the Teaching Method Designer.
-5. Establish systematic MEB method implementation.
-6. Expand assessment and progress tracking.
-7. Extend multimodal material capabilities.
-8. Conduct research evaluation.
-9. Complete production readiness requirements.
+1. Complete GitHub integration (completed).
+2. Implement quantity representation activities (implemented).
+3. Implement student identification and access control.
+4. Implement teacher-controlled activity assignment.
+5. Replace /student with the Student Learning Dashboard.
+6. Implement student performance and completion recording.
+7. Implement teacher-facing progress monitoring.
+8. Strengthen continued activity suitability verification.
+9. Review activity management and reuse requirements.
+10. Design the Teaching Method Designer.
+11. Establish systematic MEB method implementation.
+12. Expand assessment and teacher-controlled adaptation.
+13. Extend multimodal material capabilities.
+14. Conduct research evaluation.
+15. Complete remaining production readiness requirements.
 
 This sequence is provisional and may be revised
 based on educational priorities and research findings.

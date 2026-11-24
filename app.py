@@ -237,6 +237,19 @@ def open_student_activity_api(activity_id):
     if activity.get("status") != "approved":
         return jsonify(ok=False, error="Etkinlik henüz onaylanmadı."), 403
 
+    from activity_integrity import validate_activity_draft_integrity
+
+    try:
+        validate_activity_draft_integrity(activity["config"])
+    except (ValueError, TypeError, KeyError):
+        return jsonify(
+            ok=False,
+            error=(
+                "Etkinlik veya görsel nesne artık geçerli değil. "
+                "Öğretmen incelemesi gereklidir."
+            )
+        ), 409
+
     return jsonify(ok=True, activity=activity)
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from profile_storage import get_profile
+from activity_integrity import validate_activity_draft_integrity
 
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -103,44 +104,10 @@ def save_activity_draft(student_id, draft, copied_from=None):
     if draft.get("teacher_approved") is not False:
         raise ValueError("Draft must not be teacher-approved")
 
-    required = {
-        "achievement_code",
-        "activity_type",
-        "target_digit",
-        "layout_id",
-        "options",
-        "correct_index",
-    }
-
-    if not required.issubset(draft):
-        raise ValueError("Activity draft is incomplete")
-
     if copied_from is not None and not isinstance(copied_from, str):
         raise ValueError("Invalid source activity ID")
 
-    from activity_models import ActivityConfig
-    from activity_builder import build_find_digit_draft
-
-    config = ActivityConfig(
-        achievement_code=draft.get("achievement_code"),
-        target_digit=draft.get("target_digit"),
-        activity_type=draft.get("activity_type"),
-        visual_id=draft.get("visual_id"),
-        audio_enabled=draft.get("audio_enabled"),
-        celebration_enabled=draft.get("celebration_enabled"),
-        quantity_animation_enabled=draft.get("quantity_animation_enabled", False),
-        settings={"layout_id": draft.get("layout_id")},
-    )
-
-    validated = build_find_digit_draft(
-        config,
-        options=draft.get("options"),
-    )
-
-    if draft != {k: v for k, v in validated.items() if k in draft}:
-        raise ValueError(
-            "Draft does not match the validated activity configuration"
-        )
+    validate_activity_draft_integrity(draft)
 
     now = current_time()
 
@@ -288,6 +255,8 @@ def approve_saved_activity(activity_id, acknowledge_issues=False):
 
             if not freshness["current"]:
                 raise ValueError(freshness["reason"])
+
+            validate_activity_draft_integrity(activity["config"])
 
             result = validation.get("result")
 

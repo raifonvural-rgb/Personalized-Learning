@@ -739,3 +739,134 @@ do not constitute a comprehensive security audit.
 
 A real push using SSH remains to be verified.
 Clean-environment installation remains to be tested.
+
+## Step 41 - Quantity Representation Verification
+
+Date: 2026-11-24
+
+### Automated Verification
+
+| Verification area | Passed | Executed |
+|---|---:|---:|
+| Quantity configuration model | 15 | 15 |
+| Deterministic quantity builder | 18 | 18 |
+| Quantity draft integrity | 21 | 21 |
+| Shared validation equivalence | 13 | 13 |
+| Digit validation regression | 70 | 70 |
+| Quantity-specific suitability | 34 | 34 |
+| Profile boundary conditions | 14 | 14 |
+| Activity request dispatch | 34 | 34 |
+| Activity integrity dispatch | 37 | 37 |
+| Activity persistence | 41 | 41 |
+| Student validation dispatch | 87 | 87 |
+| Validation fingerprint checks | 61 | 61 |
+| Total | 445 | 445 |
+
+These counts represent cumulative test executions
+during incremental development.
+
+Some verification cases overlap.
+
+They do not represent 445 unique retained test cases
+or a comprehensive regression suite.
+
+### Additional Backend Integration Verification
+
+The following complete backend activity lifecycles
+were successfully demonstrated using isolated
+temporary storage:
+
+- Digit recognition
+- Number to Quantity
+- Quantity to Number
+
+Each lifecycle included activity generation,
+persistence, validation and teacher approval.
+
+Unknown SVG identifiers and unapproved photographic
+asset identifiers were rejected.
+
+Production student records were not modified
+during isolated backend verification.
+
+### Manual Browser Verification
+
+| Functionality | Result |
+|---|---|
+| Number-to-quantity teacher preview | PASS |
+| Quantity-to-number teacher preview | PASS |
+| Deterministic basketball group presentation | PASS |
+| Deterministic pencil group presentation | PASS |
+| Correct answer evaluation | PASS |
+| Turkish spoken counting | PASS |
+| Sequential object enlargement | PASS |
+| Individual object highlighting | PASS |
+| Combined counting and animation | PASS |
+| Saved quantity activity approval | PASS |
+| Approved quantity activity launch | PASS |
+| Original digit activity regression | PASS |
+
+Manual verification was performed by the project
+developer through the browser interface.
+
+### Safety and Integrity Controls
+
+Implemented controls include:
+
+- Activity configuration validation
+- Deterministic object count generation
+- Canonical quantity draft integrity verification
+- Student-specific suitability checks
+- Approved visual asset enforcement
+- Validation freshness checks before approval
+- Teacher approval enforcement
+- Active-student association checks
+- Launch-time activity integrity verification
+- Launch-time visual asset approval verification
+
+Implementation of a control does not establish
+comprehensive security or safety verification.
+
+### Outstanding Verification
+
+- Zero-quantity browser presentation
+- Approved photograph rendering in quantity activities
+- Independent audio and animation combinations
+- Browser reduced-motion behavior
+- Launch-time rejection of subsequently invalid assets
+- Post-approval student profile changes
+- Asset content changes under an existing identifier
+- Missing visual asset files
+- Production authentication and authorization
+- Concurrent teacher operations
+- Clean-environment installation
+- Cross-browser compatibility
+- Reusable automated regression suite
+
+### Methodological Observation
+
+Incremental automated verification supported
+the refactoring of shared validation infrastructure
+while preserving existing digit activity behavior.
+
+However, repeated ad hoc verification introduced
+development overhead without always producing
+proportionate additional evidence.
+
+Future development will prioritize targeted tests,
+reusable regression cases and milestone-level
+integration verification, as specified in DD-030.
+
+### Educational Evidence Limitation
+
+Successful software verification demonstrates
+functional behavior under the tested conditions.
+
+It does not establish:
+
+- Pedagogical effectiveness
+- Improved student learning outcomes
+- Clinical or educational suitability for all students
+- Comprehensive implementation of any MEB teaching method
+
+These require separate educational evaluation.

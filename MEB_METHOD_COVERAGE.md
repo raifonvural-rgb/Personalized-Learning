@@ -297,6 +297,91 @@ software functionality exists.
 They indicate that systematic method-specific
 coverage assessment has not yet been completed.
 
+
+## 9A. Step 41 - Quantity Representation Capabilities
+
+Date: 2026-11-24
+
+### Implemented Reusable Capabilities
+
+- Number-to-quantity correspondence
+- Quantity-to-number correspondence
+- Deterministic object group generation
+- Configurable numerical ranges from zero to nine
+- Configurable answer choices
+- Grid, horizontal and vertical object arrangements
+- Turkish spoken instructions
+- Optional spoken counting
+- Sequential individual object highlighting
+- Sequential individual object enlargement
+- Combined visual and auditory counting reinforcement
+- Student-specific suitability validation
+- Teacher review and approval
+
+### Potential Method Contributions
+
+| Method | Supporting capability |
+|---|---|
+| MEB-17 | Visual representation and numerical symbol correspondence |
+| MEB-18 | Combined visual and auditory reinforcement |
+| MEB-19 | Deterministic visual object groups |
+| MEB-21 | Spoken instructions and counting |
+| MEB-22 | Digital representations of countable materials |
+| MEB-23 | Interactive computer-based quantity activities |
+| MEB-24 | Personalized technology-supported activities |
+| MEB-32 | Configurable numerical ranges and answer choices |
+
+These relationships identify candidate contributions
+to future method-specific implementation.
+
+They do not establish complete implementation
+of the corresponding teaching methods.
+
+### Pedagogical Boundaries
+
+Digital object representations do not replace
+concrete physical materials in CRA instruction.
+
+Number-to-quantity and quantity-to-number activities
+support representational and abstract correspondence,
+but do not establish a complete CRA teaching sequence.
+
+Combined visual and auditory reinforcement does not
+by itself establish complete multisensory instruction.
+
+Configurable numerical ranges do not establish
+a complete progressive mathematics teaching method.
+
+### Automatic Verification
+
+Implemented quantity-specific checks include:
+
+- Correct object quantities
+- Consistent answer choices
+- Simultaneously displayed object count
+- Visual asset approval
+- Animation suitability
+- Moving image suitability
+- Spoken counting suitability
+
+Uncertain suitability findings remain subject
+to teacher assessment.
+
+### Coverage Status
+
+All 35 teaching methods remain at their existing
+formal method-specific coverage status.
+
+No method is promoted to implemented, verified
+or pedagogically evaluated solely because of
+the Step 41 software implementation.
+
+Official MEB learning outcome mapping and
+authoritative method-specific requirement analysis
+remain pending.
+
+See TEST_RESULTS.md for functional evidence.
+
 ## 10. Method-Specific Implementation Record
 
 Create a separate implementation record for each

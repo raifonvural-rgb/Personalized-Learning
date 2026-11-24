@@ -252,9 +252,191 @@ The development server binds to:
 
     127.0.0.1:6000
 
+
+## 11A. Quantity Representation Architecture
+
+Implemented in Step 41.
+
+The activity architecture supports three interactive
+activity types:
+
+- find_digit
+- number_to_quantity
+- quantity_to_number
+
+Quantity representation remains independent of
+digit recognition.
+
+### Quantity Activity Components
+
+| Module | Responsibility |
+|---|---|
+| quantity_activity_models.py | Configuration and constraints |
+| quantity_activity_builder.py | Deterministic activity generation |
+| quantity_activity_integrity.py | Canonical draft verification |
+| quantity_activity_validation.py | Quantity-specific suitability checks |
+| student_activity_validation.py | Shared student requirement checks |
+| visual_asset_validation.py | Shared visual asset approval checks |
+| activity_integrity.py | Activity integrity dispatch |
+| activity_validation_dispatcher.py | Student validation dispatch |
+| activity_request.py | Activity request processing |
+| activity_storage.py | Shared persistence and approval |
+
+### Activity Processing Pipeline
+
+    Teacher Configuration
+            |
+            v
+    Activity Request Dispatcher
+            |
+            v
+    Activity-Specific Model and Builder
+            |
+            v
+    Deterministic Activity Draft
+            |
+            v
+    Integrity Verification
+            |
+            v
+    Student-Specific Validation
+            |
+            v
+    Teacher Review and Approval
+            |
+            v
+    Launch-Time Integrity Verification
+            |
+            v
+    Interactive Student Activity
+
+### Deterministic Object Representation
+
+Each object group references a single approved
+visual asset through multiple object instances.
+
+Object quantities are generated programmatically,
+rather than relying on generative AI to produce
+images containing an exact number of objects.
+
+Zero is represented by an empty object group.
+
+### Student-Specific Quantity Validation
+
+Quantity-specific checks include:
+
+- Total simultaneously displayed object count
+- Animation suitability
+- Moving image suitability
+- Spoken counting suitability
+- Object arrangement review
+- Visual complexity review
+- Reinforcement suitability review
+- Academic suitability review
+
+Uncertain checks require teacher assessment.
+
+### Interactive Counting Reinforcement
+
+After a correct response, the student interface
+can sequentially enlarge and highlight individual
+objects while optionally counting aloud in Turkish.
+
+Animation and spoken counting are independently
+configurable.
+
+The implementation respects browser reduced-motion
+preferences.
+
+### Current Student Routes
+
+- /student: original standalone demonstration
+- /student?preview=1: teacher preview
+- /student?activity_id=...: approved activity execution
+
+These routes describe the current prototype,
+not the intended final student architecture.
+
+### Remaining Limitations
+
+- Production authentication and authorization
+  are not yet implemented.
+- Post-approval student profile changes are not
+  automatically checked at activity launch.
+- Asset content changes under the same identifier
+  are not detected.
+- Missing image files are not comprehensively
+  checked before delivery.
+- Teacher preview uses browser session storage.
+- Official MEB learning outcome mapping for quantity
+  activities remains pending.
+
+## 11B. Planned Student Learning Architecture
+
+Status: Accepted design; implementation pending.
+
+The standalone student demonstration will be replaced
+by a personalized Student Learning Dashboard.
+
+Planned routes:
+
+    /student
+        Student Learning Dashboard
+
+    /student/activity/<activity_id>
+        Assigned and approved activity execution
+
+    /student/preview
+        Authorized teacher preview
+
+No separate demonstration route will be maintained.
+
+Existing interactive activity execution functionality
+will be reused.
+
+### Planned Learning Lifecycle
+
+    Activity Design
+           |
+           v
+    Automatic Suitability Validation
+           |
+           v
+    Teacher Approval
+           |
+           v
+    Teacher Assignment
+           |
+           v
+    Student Learning Dashboard
+           |
+           v
+    Activity Execution
+           |
+           v
+    Performance Recording
+           |
+           v
+    Teacher Progress Monitoring
+
+Approval and assignment are separate operations.
+
+Only assigned and approved activities may be
+accessible to the authorized student.
+
+Teacher previews must not generate student
+performance records.
+
+Dashboard presentation must respect individual
+student requirements.
+
+See DD-028, DD-029, RM-025 and RM-026.
+
 ## 12. Planned Architectural Extensions
 
-- Quantity representation activities
+- Student Learning Dashboard
+- Teacher-controlled activity assignment
+- Continued activity suitability verification
 - Teaching Method Designer
 - Structured prompting and prompt fading
 - Learning progression and mastery assessment

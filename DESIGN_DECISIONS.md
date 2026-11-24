@@ -534,6 +534,146 @@ Rationale:
 Successful local functional testing does not
 establish production readiness.
 
+
+## DD-026 - Quantity Representation Activities
+
+Status: Accepted and implemented.
+
+Decision:
+
+Support two independent instructional directions:
+
+- Number to Quantity (Rakamdan miktara)
+- Quantity to Number (Miktardan rakama)
+
+Generate object groups through deterministic replication
+of a single approved visual asset.
+
+Support quantities from zero to nine, configurable
+answer choices, and grid, horizontal and vertical
+object arrangements.
+
+Do not assign an official MEB learning outcome code
+until authoritative curriculum mapping is verified.
+
+## DD-027 - Educational Counting Reinforcement
+
+Status: Accepted and implemented.
+
+Decision:
+
+Quantity animation must reinforce counting rather
+than merely provide a success reward.
+
+Individual objects are sequentially enlarged and
+highlighted, optionally synchronized with Turkish
+spoken counting.
+
+Spoken counting and quantity animation are independently
+configurable by the teacher.
+
+Counting reinforcement occurs after the correct answer
+to avoid revealing the answer prematurely.
+
+Respect browser reduced-motion preferences.
+
+## DD-028 - Student Learning Dashboard
+
+Status: Accepted. Implementation pending.
+
+Decision:
+
+Replace the original standalone /student demonstration
+with a personalized Student Learning Dashboard
+(Ogrenci Ogrenme Paneli).
+
+The planned route architecture is:
+
+- /student
+  Student Learning Dashboard.
+
+- /student/activity/<activity_id>
+  Execution of an assigned and approved activity.
+
+- /student/preview
+  Authorized teacher preview.
+
+Do not introduce a separate /student/demo route.
+
+Preserve existing interactive learning functionality
+by integrating it into the activity execution interface.
+
+Historical demonstration code remains available
+through Git version history.
+
+Rationale:
+
+Provide a single, clear entry point for students
+and prevent bypassing the personalized learning workflow.
+
+The dashboard must itself respect individual student
+requirements.
+
+Dependencies:
+
+- Secure student identification
+- Teacher and student authorization
+- Activity assignment management
+- Student-specific activity access control
+
+## DD-029 - Approval, Assignment and Execution Separation
+
+Status: Accepted. Assignment implementation pending.
+
+Decision:
+
+Distinguish three independent concepts:
+
+1. Approval: the teacher determines that an activity
+   is suitable for a particular student.
+
+2. Assignment: the teacher determines that the student
+   should undertake an approved activity.
+
+3. Execution: the student performs an assigned activity.
+
+Approval does not automatically imply assignment.
+
+Students must access only their own assigned and
+approved activities.
+
+Teacher previews must not generate student performance
+records.
+
+Historical performance evidence must remain available
+when activities are revised.
+
+AI-generated learning recommendations must remain
+subject to teacher approval.
+
+## DD-030 - Proportionate Development Verification
+
+Status: Accepted.
+
+Decision:
+
+Prioritize functional development through small,
+controlled implementation increments.
+
+Perform targeted verification after meaningful changes
+and broader regression checks at milestone boundaries.
+
+Retain important regression tests in reusable test files.
+
+Avoid repetitive ad hoc testing that provides little
+additional evidence or delays functional development.
+
+Safety-critical validation, student isolation and
+teacher approval controls require rigorous verification.
+
+This decision refines DD-023 without removing its
+incremental development principles.
+
 ## Decision Maintenance
 
 New significant decisions must receive a unique identifier.

@@ -7,6 +7,7 @@ It does not store student data or approve activities.
 
 from dataclasses import dataclass, field
 from typing import Optional
+from visual_asset_validation import validate_visual_asset
 
 
 ACHIEVEMENTS = {
@@ -79,30 +80,7 @@ class ActivityConfig:
                     "Drawing must be enabled for writing activities"
                 )
 
-        if self.visual_id is not None:
-            if not isinstance(self.visual_id, str) or not self.visual_id.strip():
-                raise ValueError("visual_id must be a nonempty string")
-
-            from visual_library.routes import OBJECTS
-            from visual_library.photo_storage import list_approved_images
-
-            if self.visual_id.startswith("photo:"):
-                photo_id = self.visual_id.removeprefix("photo:")
-                approved_ids = {
-                    asset["id"]
-                    for asset in list_approved_images()
-                    if asset.get("teacher_approved") is True
-                }
-
-                if photo_id not in approved_ids:
-                    raise ValueError(
-                        f"Unknown or unapproved photo: {photo_id}"
-                    )
-
-            elif self.visual_id not in OBJECTS:
-                raise ValueError(
-                    f"Unknown visual library object: {self.visual_id}"
-                )
+        validate_visual_asset(self.visual_id)
 
         if not isinstance(self.settings, dict):
             raise ValueError("settings must be a dictionary")
