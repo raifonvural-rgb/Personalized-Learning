@@ -709,3 +709,33 @@ of this verification.
 
 Syntax verification does not establish runtime
 correctness, security or pedagogical effectiveness.
+
+## GitHub Integration Verification
+
+Date: 2026-11-24
+
+| Verification | Result |
+|---|---|
+| Initial local commit | PASS |
+| Remote history preservation | PASS |
+| Merge without conflicts | PASS |
+| Initial GitHub push | PASS |
+| Remote commit identity | PASS |
+| Published inventory of 56 files | PASS |
+| Seven continuity documents readable | PASS |
+| Python source directly retrievable | PASS |
+| Student data directory excluded | PASS |
+| Uploaded photographs excluded | PASS |
+| Credential files excluded | PASS |
+| Backup files excluded | PASS |
+| Dedicated SSH key configuration | PASS |
+| SSH fetch | PASS |
+| SSH push dry run | PASS |
+
+Limitations:
+
+File inventory verification and preliminary pattern scanning
+do not constitute a comprehensive security audit.
+
+A real push using SSH remains to be verified.
+Clean-environment installation remains to be tested.
