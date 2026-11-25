@@ -708,3 +708,55 @@ Production authentication and authorization remain outstanding.
 
 Activity assignment and student performance recording are
 not part of this milestone.
+
+
+## Step 44 — Teacher-Controlled Activity Assignment
+
+Date: 2026-11-25
+
+Status: COMPLETED
+
+Implementation commit: 251fb5c
+
+Implemented:
+
+- Persistent assignment storage.
+- Teacher assignment API.
+- Assignment button for approved activities.
+- Current assignment indicator.
+- Assignment-bound learning sessions.
+- Independent student execution routes.
+- Automatic assigned activity launch.
+- Student session termination.
+- Conditional assignment removal.
+- Invalid activity redirect protection.
+
+Verified:
+
+- Python and template compilation.
+- Flask route registration.
+- Teacher-to-student activity execution.
+- Session termination.
+- Assignment removal and reassignment.
+- Invalid session cleanup.
+- Preservation of teacher context.
+
+A runtime NameError in the learning session API
+was identified and corrected.
+
+Detailed evidence and deferred verification cases
+are recorded in TEST_RESULTS.md.
+
+Remaining limitations:
+
+- Teacher-assisted student identification.
+- No production authentication.
+- No performance recording.
+- No continuous assignment monitoring.
+- Comprehensive multi-student and concurrency
+  verification deferred.
+
+Next proposed milestone:
+
+Step 45 — Student Performance Recording
+and Progress Tracking.

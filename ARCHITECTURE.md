@@ -522,3 +522,82 @@ for assigned activity execution and is not implemented yet.
 
 Session separation is not authentication or full authorization.
 The current architecture supports supervised prototype use only.
+
+
+## Step 44 — Teacher-Controlled Activity Assignment
+
+The architecture now distinguishes four independent concepts:
+
+1. Activity design and configuration.
+2. Teacher validation and approval.
+3. Teacher-controlled activity assignment.
+4. Student learning execution.
+
+### Assignment Layer
+
+New modules:
+
+- assignment_storage.py
+- assignment_api.py
+
+Assignments are stored separately from approved activities
+in data/assignments.json.
+
+Each student can have one current assignment.
+Each assignment has a unique identifier, student identifier,
+activity identifier and assignment timestamp.
+
+Assignment storage uses file locking and atomic replacement.
+
+### Learning Session Layer
+
+The learning session maintains:
+
+- learning_student_id
+- learning_assignment_id
+
+These are independent of active_student_id,
+which belongs to the teacher context.
+
+### Execution Routes
+
+Teacher preview:
+
+- /student/preview
+- /api/student-activities/<activity_id>
+
+Student learning:
+
+- /student/activity/<activity_id>
+- /api/learning-activity/<activity_id>
+
+Assignment management:
+
+- GET /api/activity-assignment
+- POST /api/activity-assignment
+
+Student session management:
+
+- GET /api/learning-session
+- POST /api/learning-session
+- DELETE /api/learning-session
+
+The existing student activity rendering engine is reused
+for teacher preview and actual learning.
+
+The server determines the execution mode.
+
+Student execution requires a matching learning session,
+current assignment, student ownership, approved activity
+and successful activity integrity verification.
+
+Session termination clears only the matching assignment.
+Approved activities remain available for future use.
+
+Invalid activity execution clears the learning session
+before redirecting to the student dashboard.
+
+The invalid assignment remains available for teacher review.
+
+Production authentication, comprehensive concurrency
+verification and performance recording remain outstanding.

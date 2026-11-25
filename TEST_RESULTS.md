@@ -918,3 +918,109 @@ Multi-student verification was explicitly deferred.
 
 These results do not establish comprehensive regression coverage,
 production security or educational effectiveness.
+
+## Step 44 — Activity Assignment and Learning Execution
+
+Date: 2026-11-25
+
+Implementation commit: 251fb5c
+
+### Completed Verification
+
+| Verification item | Result |
+|---|---|
+| Python module compilation | PASS |
+| Jinja template compilation | PASS |
+| Assignment and learning route registration | PASS |
+| Teacher activity assignment | PASS |
+| Current assignment indicator | PASS |
+| Automatic digit activity launch | PASS |
+| Student activity interaction | PASS |
+| Learning session termination | PASS |
+| Assignment removal after termination | PASS |
+| Approved activity preservation | PASS |
+| Teacher context preservation | PASS |
+| Reassignment with different activities | PASS |
+| Invalid session redirect | PASS |
+| Invalid learning session cleanup | PASS |
+| Teacher context preservation after invalid session | PASS |
+| Learning session API after invalid session cleanup | PASS |
+| GitHub implementation push | PASS |
+| Remote commit identity verification | PASS |
+
+Browser results were confirmed by the project developer.
+Invalid session handling was verified using the Flask test client.
+
+### Runtime Failure and Resolution
+
+The learning session API initially returned HTTP 500
+when processing an existing browser session.
+
+The underlying exception was a NameError caused by
+missing assignment storage imports and an incomplete
+learning session module update.
+
+Python compilation had not detected the runtime failure.
+
+The module was replaced with a consistent implementation
+covering assignment association, session restoration
+and session termination.
+
+Subsequent browser execution and reassignment were successful.
+
+### Deferred Verification Backlog
+
+The following cases will be retained for later
+milestone-level or pre-release verification.
+
+| Test ID | Verification scenario | Status |
+|---|---|---|
+| T44-01 | Multiple student assignment isolation | DEFERRED |
+| T44-02 | Concurrent teacher assignment operations | DEFERRED |
+| T44-03 | Assignment replacement during active execution | DEFERRED |
+| T44-04 | Session restoration after browser refresh | DEFERRED |
+| T44-05 | Direct access without a learning session | DEFERRED |
+| T44-06 | Access to another student's assigned activity | DEFERRED |
+| T44-07 | Attempt to assign an unapproved activity | DEFERRED |
+| T44-08 | Start learning without an assignment | DEFERRED |
+| T44-09 | Invalid visual asset after assignment | DEFERRED |
+| T44-10 | Assignment preservation after invalid activity | DEFERRED |
+| T44-11 | Browser back navigation after termination | DEFERRED |
+| T44-12 | Simultaneous independent student sessions | DEFERRED |
+| T44-13 | Assignment persistence after server restart | DEFERRED |
+| T44-14 | Complete teacher preview regression | DEFERRED |
+| T44-15 | Production authentication and authorization | DEFERRED |
+
+Previously documented outstanding verification
+items remain part of the cumulative backlog.
+
+## Development Verification Policy
+
+Effective: 2026-11-25
+
+Development will prioritize implementation progress
+while maintaining essential software integrity checks.
+
+During incremental development:
+
+- Perform basic compilation and integration checks.
+- Use targeted functional verification for significant features.
+- Investigate blocking failures when encountered.
+- Avoid repetitive ad hoc verification.
+- Record deferred test scenarios with stable identifiers.
+- Preserve previously recorded verification evidence.
+
+Before project completion:
+
+- Consolidate deferred scenarios into reusable test suites.
+- Execute comprehensive regression and integration testing.
+- Evaluate security, accessibility and usability.
+- Verify clean-environment installation.
+- Document failures, corrections and remaining limitations.
+
+Safety-critical controls and blocking integrity problems
+must not be deferred merely to accelerate development.
+
+Software verification does not establish educational
+effectiveness or comprehensive MEB method coverage.
+

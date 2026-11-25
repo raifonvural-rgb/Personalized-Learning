@@ -718,3 +718,74 @@ Multi-student operation requires further verification.
 This decision simplifies supervised classroom operation.
 It does not provide production-grade identity verification,
 authentication or authorization.
+
+
+## DD-032 — Single Active Activity Assignment
+
+Date: 2026-11-25
+
+Status: Implemented
+
+A teacher assigns one approved activity at a time
+to an individual student.
+
+Assignment is independent of activity approval.
+
+Assigning another activity replaces the current assignment.
+
+The student does not select activities from a queue.
+The assigned activity opens automatically when the
+learning session starts.
+
+This decision minimizes student interaction complexity
+and preserves teacher control.
+
+Scheduling, activity queues and automatic sequencing
+are outside the current implementation scope.
+
+## DD-033 — Assignment-Bound Learning Sessions
+
+Date: 2026-11-25
+
+Status: Implemented
+
+Learning sessions are associated with unique assignment
+identifiers rather than student identifiers alone.
+
+Session termination removes an assignment only when
+its identifier matches the learning session.
+
+This prevents an older learning session from deleting
+a newer assignment.
+
+Approved activities and teacher context remain unchanged.
+
+Invalid learning sessions are cleared without silently
+deleting the underlying assignment.
+
+An already rendered activity is not continuously
+monitored for assignment changes.
+
+## DD-034 — Deferred Comprehensive Verification
+
+Date: 2026-11-25
+
+Status: Adopted
+
+Extends DD-030.
+
+Incremental development will prioritize implementation
+with proportionate verification.
+
+Basic compilation, integration checks and targeted
+functional tests will continue.
+
+Additional test scenarios will be recorded in
+TEST_RESULTS.md for later execution.
+
+Comprehensive regression, security, accessibility
+and usability verification will be conducted
+before project completion.
+
+Blocking failures and essential integrity controls
+must still be addressed during development.

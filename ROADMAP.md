@@ -566,3 +566,46 @@ Teacher preview must remain independent of actual student learning.
 
 Production authentication, authorization and privacy safeguards
 must be addressed before deployment beyond supervised prototype use.
+
+
+## Step 44 — Activity Assignment and Learning Execution
+
+Status: COMPLETED
+
+Implementation commit: 251fb5c
+
+The teacher-controlled activity assignment and student
+learning execution workflow is implemented and verified
+under the tested conditions.
+
+Comprehensive verification scenarios are retained
+in TEST_RESULTS.md.
+
+## Step 45 — Student Performance Recording
+and Progress Tracking
+
+Status: PROPOSED
+
+The detailed requirements will be established
+before implementation.
+
+Candidate capabilities:
+
+- Learning session history.
+- Student response recording.
+- Correct and incorrect attempts.
+- Response duration.
+- Assistance and prompting information.
+- Activity completion information.
+- Achievement-level progress.
+- Teacher-facing performance summaries.
+- Evidence supporting subsequent personalization.
+
+The final performance data model and educational
+interpretation rules remain to be determined.
+
+Performance observations must not automatically
+be interpreted as achievement mastery.
+
+Comprehensive regression and integration testing
+will be consolidated toward project completion.

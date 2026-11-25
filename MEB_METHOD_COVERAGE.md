@@ -523,3 +523,30 @@ remain unchanged.
 Future activity assignment and performance recording may
 support instructional method implementation and evaluation,
 but do not independently establish teaching method coverage.
+
+
+## Step 44 — Assignment and Execution Infrastructure
+
+Teacher-controlled assignment infrastructure now connects
+approved personalized activities with actual student
+learning sessions.
+
+Potential contributions include:
+
+- Teacher-directed activity selection.
+- Individualized instructional delivery.
+- Controlled presentation of approved activities.
+- Repeated practice through reassignment.
+- Separation of instructional design and execution.
+
+This infrastructure supports future implementation
+of multiple MEB teaching methods.
+
+However, activity assignment alone does not establish
+complete implementation of any teaching method.
+
+The formal coverage classifications of all 35
+mandatory MEB teaching methods remain unchanged.
+
+Method-specific instructional behavior and educational
+evaluation remain necessary.

@@ -177,3 +177,32 @@ Activity assignment is planned for Step 44.
 
 The current student identification mechanism is intended for
 supervised prototype use and is not production authentication.
+
+
+## Teacher-to-Student Learning Workflow
+
+Implemented in Step 44.
+
+1. Teacher selects a student.
+2. Teacher designs a personalized activity.
+3. The activity undergoes automatic validation.
+4. Teacher reviews and approves the activity.
+5. Teacher selects Ogrenciye Ata in the saved activity list.
+6. Student identification is performed on the learning dashboard.
+7. Ogrenmeye Basla automatically opens the assigned activity.
+8. The student interacts with the activity.
+9. Oturumu Sonlandir terminates the learning session.
+10. The teacher can assign another approved activity.
+
+Only one current assignment is maintained per student.
+
+Ending a learning session removes the matching assignment
+without deleting the approved activity.
+
+Teacher preview remains independent of actual learning.
+
+The current prototype uses teacher-assisted identification.
+It is not a production-authenticated student platform.
+
+Student performance recording and progress tracking
+are planned for subsequent development.
