@@ -620,6 +620,34 @@
 </head>
 <body>
     <main class="activity">
+        {% if assignment_execution_mode | default(false) %}
+<div style="text-align:left; margin:0 0 16px 0;">
+    <button
+        id="endAssignmentSessionButton"
+        type="button"
+        onclick="endAssignmentSession()"
+        style="padding:14px 28px; background:white;
+               color:#b91c1c; border:2px solid #b91c1c;
+               border-radius:12px; font-size:18px;
+               font-weight:bold; cursor:pointer;">
+        Oturumu Sonlandır
+    </button>
+
+    <p id="endAssignmentSessionMessage"
+       role="status"
+       aria-live="polite"></p>
+</div>
+{% endif %}
+
+<div class="controls" style="justify-content:flex-start; margin:0 0 20px 0;">
+            <button class="control-button secondary" onclick="speakInstruction()">
+                🔊 Dinle
+            </button>
+            <button class="control-button" onclick="nextQuestion()">
+                Sonraki →
+            </button>
+        </div>
+
         <div class="activity-label" id="activityLabel">MAT1.1.1 — Rakamları gösterir</div>
 
         <h1 id="activityHeading">Rakamları Öğreniyorum</h1>
@@ -701,14 +729,7 @@
         </div>
 
 
-        <div class="controls">
-            <button class="control-button secondary" onclick="speakInstruction()">
-                🔊 Dinle
-            </button>
-            <button class="control-button" onclick="nextQuestion()">
-                Sonraki →
-            </button>
-        </div>
+
     </main>
 
 
@@ -734,6 +755,10 @@
 
         const listenButton = document.querySelector(
             '[onclick="speakInstruction()"]'
+        );
+
+        const nextButton = document.querySelector(
+            '[onclick="nextQuestion()"]'
         );
 
         if (!audioEnabled) {
@@ -2563,6 +2588,11 @@
                 controller.hasStaleStoredResponse
             );
 
+            nextButton.hidden = !(
+                controller?.canCompleteAssignment ||
+                controller?.canStartRepetition
+            );
+
             if (controller?.canCompleteAssignment) {
 
                 nextButton.textContent = "Sonraki";
@@ -2957,22 +2987,7 @@
 
 {% if assignment_execution_mode | default(false) %}
 
-<div style="text-align:center; margin:24px auto;">
-    <button
-        id="endAssignmentSessionButton"
-        type="button"
-        onclick="endAssignmentSession()"
-        style="padding:14px 28px; background:white;
-               color:#b91c1c; border:2px solid #b91c1c;
-               border-radius:12px; font-size:18px;
-               font-weight:bold; cursor:pointer;">
-        Oturumu Sonlandır
-    </button>
 
-    <p id="endAssignmentSessionMessage"
-       role="status"
-       aria-live="polite"></p>
-</div>
 
 <script>
     async function endAssignmentSession() {

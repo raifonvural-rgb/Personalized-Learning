@@ -43,8 +43,8 @@ app.config["SECRET_KEY"] = key_file.read_text(encoding="utf-8").strip()
 app.register_blueprint(visual_library_bp)
 app.register_blueprint(profile_api)
 app.register_blueprint(active_student_api)
-app.register_blueprint(learning_session_api)
-app.register_blueprint(assignment_api)
+# Retired in schema version 2: app.register_blueprint(learning_session_api)
+# Retired in schema version 2: app.register_blueprint(assignment_api)
 app.register_blueprint(assignments_api)
 app.register_blueprint(student_sequence_api)
 app.register_blueprint(student_execution_api)
@@ -275,7 +275,7 @@ def student_assignment_execution(assignment_id):
         return response
 
 
-@app.route("/student/activity/<activity_id>")
+# Retired in schema version 2: @app.route("/student/activity/<activity_id>")
 def student_assigned_activity(activity_id):
     from flask import redirect, url_for, make_response, session
 
@@ -342,7 +342,7 @@ def student_assigned_activity(activity_id):
     return response
 
 
-@app.route("/api/learning-activity/<activity_id>")
+# Retired in schema version 2: @app.route("/api/learning-activity/<activity_id>")
 def learning_activity_api(activity_id):
     from flask import jsonify, make_response
 

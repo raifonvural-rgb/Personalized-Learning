@@ -15,7 +15,7 @@ from pathlib import Path
 DATA_DIR = Path(__file__).resolve().parent / "data"
 DATABASE_PATH = DATA_DIR / "performance.db"
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 SCHEMA_STATEMENTS = (
