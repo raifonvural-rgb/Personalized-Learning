@@ -167,7 +167,7 @@
 
         <h2 id="welcomeMessage"></h2>
 
-        <p>Öğrenci oturumu aktif.</p>
+        <p id="sequenceStatusMessage"></p>
 
     </section>
 
@@ -185,16 +185,37 @@
         Oturumu Sonlandır
     </button>
 
+    <button id="continueButton"
+            class="start-button"
+            type="button"
+            hidden disabled>
+        Sonraki Etkinlik
+    </button>
+
+    <button id="recoverButton"
+            class="end-button"
+            type="button"
+            hidden disabled>
+        Oturumu Kurtar
+    </button>
+
     <section id="activitiesPanel"
              class="activities" hidden>
 
         <h2>Etkinliklerim</h2>
 
         <p>
-            Atanan etkinlik açılıyor...
+            <span id="activityStatusMessage"></span>
         </p>
 
     </section>
+
+    <button id="retryButton"
+            class="start-button"
+            type="button"
+            hidden disabled>
+        Tekrar Dene
+    </button>
 
     <p id="message"
        class="message"
@@ -205,185 +226,595 @@
 
 
 <script>
-    const studentSelect = document.getElementById("studentSelect");
-    const selectionPanel = document.getElementById("selectionPanel");
-    const welcomePanel = document.getElementById("welcomePanel");
-    const welcomeMessage = document.getElementById("welcomeMessage");
-    const activitiesPanel = document.getElementById("activitiesPanel");
-    const startButton = document.getElementById("startButton");
-    const endButton = document.getElementById("endButton");
-    const message = document.getElementById("message");
+    const studentSelect =
+        document.getElementById("studentSelect");
+
+    const selectionPanel =
+        document.getElementById("selectionPanel");
+
+    const welcomePanel =
+        document.getElementById("welcomePanel");
+
+    const welcomeMessage =
+        document.getElementById("welcomeMessage");
+
+    const activitiesPanel =
+        document.getElementById("activitiesPanel");
+
+    const startButton =
+        document.getElementById("startButton");
+
+    const endButton =
+        document.getElementById("endButton");
+
+    const continueButton =
+        document.getElementById("continueButton");
+
+    const recoverButton =
+        document.getElementById("recoverButton");
+
+    const sequenceStatusMessage =
+        document.getElementById("sequenceStatusMessage");
+
+    const activityStatusMessage =
+        document.getElementById("activityStatusMessage");
+
+    const message =
+        document.getElementById("message");
+
+    const retryButton =
+        document.getElementById("retryButton");
+
 
     let currentStudent = null;
+
+    let currentAssignment = null;
+
+    let currentPerformanceSessionId = null;
+
+    let sequenceStatus = "NO_CONTEXT";
+
     let busy = false;
+
     let initialized = false;
 
-    async function apiRequest(url, method = "GET", data = null) {
+    let retryRequired = false;
+
+
+    async function apiRequest(
+        url,
+        method = "GET",
+        data = null
+    ) {
+
         const options = {
             method: method,
             cache: "no-store"
         };
 
         if (data !== null) {
+
             options.headers = {
                 "Content-Type": "application/json"
             };
+
             options.body = JSON.stringify(data);
         }
 
         const response = await fetch(url, options);
+
         const result = await response.json();
 
-        if (!response.ok) {
+        if (!response.ok || result.ok === false) {
+
             throw new Error(
-                result.error || "İşlem gerçekleştirilemedi."
+                result.error ||
+                "İşlem gerçekleştirilemedi."
             );
         }
 
         return result;
     }
 
-    function updateInterface() {
-        const active = currentStudent !== null;
 
-        selectionPanel.hidden = active;
-        welcomePanel.hidden = !active;
-        activitiesPanel.hidden = !active;
+    function applySequenceResult(result) {
 
-        studentSelect.disabled = busy || active || !initialized;
+        sequenceStatus = result.sequence_status;
 
-        startButton.disabled =
-            busy || active || !initialized || !studentSelect.value;
+        currentStudent = result.student || null;
 
-        endButton.disabled = busy || !active;
+        currentAssignment = result.assignment || null;
 
-        welcomeMessage.textContent = active
-            ? "Hoş geldin, " + currentStudent.name + "!"
-            : "";
+        currentPerformanceSessionId =
+            result.performance_session_id || null;
+
+        if (
+            sequenceStatus === "NO_CONTEXT" ||
+            sequenceStatus === "NO_ELIGIBLE_ASSIGNMENT"
+        ) {
+
+            currentStudent = null;
+
+            currentAssignment = null;
+        }
     }
 
+
+    function updateInterface() {
+
+        const selectable = (
+            sequenceStatus === "NO_CONTEXT" ||
+            sequenceStatus === "NO_ELIGIBLE_ASSIGNMENT"
+        );
+
+        const stale =
+            sequenceStatus === "STALE_CONTEXT";
+
+        const canEnd = [
+            "ACTIVE",
+            "ASSIGNMENT_COMPLETED",
+            "BETWEEN_ASSIGNMENTS"
+        ].includes(sequenceStatus);
+
+        const canContinue =
+            sequenceStatus === "ASSIGNMENT_COMPLETED";
+
+        retryButton.hidden = !retryRequired;
+
+        retryButton.disabled = busy;
+
+        selectionPanel.hidden = !selectable;
+
+        welcomePanel.hidden = !currentStudent;
+
+        activitiesPanel.hidden =
+            selectable || stale;
+
+        studentSelect.disabled =
+            busy || retryRequired ||
+            !selectable || !initialized;
+
+        startButton.hidden = !selectable;
+
+        startButton.disabled =
+            busy ||
+            retryRequired ||
+            !selectable ||
+            !initialized ||
+            !studentSelect.value;
+
+        endButton.hidden = !canEnd;
+
+        endButton.disabled =
+            busy || retryRequired || !canEnd;
+
+        recoverButton.hidden = !stale;
+
+        recoverButton.disabled =
+            busy || retryRequired || !stale;
+
+        continueButton.hidden = !canContinue;
+
+        continueButton.disabled =
+            busy || retryRequired || !canContinue;
+
+        welcomeMessage.textContent = currentStudent
+            ? "Hoş geldin, " + currentStudent.name + "!"
+            : "";
+
+        const statusLabels = {
+
+            ACTIVE: "Öğrenme oturumu aktif.",
+
+            ASSIGNMENT_COMPLETED:
+                "Etkinlik tamamlandı.",
+
+            BETWEEN_ASSIGNMENTS:
+                "Sonraki etkinlik bekleniyor.",
+
+            STALE_CONTEXT:
+                "Oturum bilgilerinin kurtarılması gerekiyor."
+        };
+
+        sequenceStatusMessage.textContent =
+            statusLabels[sequenceStatus] || "";
+
+        activityStatusMessage.textContent =
+            sequenceStatus === "ACTIVE"
+                ? "Atanan etkinlik açılıyor..."
+                : statusLabels[sequenceStatus] || "";
+    }
+
+
     async function loadStudents() {
-        const result = await apiRequest("/api/student-profiles");
+
+        const result = await apiRequest(
+            "/api/student-profiles"
+        );
 
         studentSelect.replaceChildren(
             new Option("Öğrenci seçiniz", "")
         );
 
         for (const student of result.students) {
+
             studentSelect.add(
                 new Option(student.name, student.id)
             );
         }
     }
 
+
     function launchAssignedActivity(assignment) {
-        if (!assignment || !assignment.activity_id) {
-            throw new Error("Henüz etkinlik atanmadı.");
+
+        if (
+            sequenceStatus !== "ACTIVE" ||
+            !assignment ||
+            !assignment.assignment_id
+        ) {
+
+            throw new Error(
+                "Geçerli etkinlik ataması bulunamadı."
+            );
         }
 
         window.location.replace(
-            "/student/activity/" +
-            encodeURIComponent(assignment.activity_id)
+            "/student/assignment/" +
+            encodeURIComponent(
+                assignment.assignment_id
+            )
         );
     }
 
+
     async function initializeDashboard() {
+
+        if (busy) return;
+
         busy = true;
+
+        initialized = false;
+
+        retryRequired = false;
+
+        message.textContent = "";
+
         updateInterface();
 
         try {
-            const result = await apiRequest("/api/learning-session");
-            currentStudent = result.student;
 
-            if (currentStudent && result.assignment) {
-                launchAssignedActivity(result.assignment);
+            const result = await apiRequest(
+                "/api/student-sequence"
+            );
+
+            applySequenceResult(result);
+
+            if (sequenceStatus === "ACTIVE") {
+
+                launchAssignedActivity(
+                    currentAssignment
+                );
+
                 return;
             }
 
-            if (!currentStudent) {
+            if (sequenceStatus === "NO_CONTEXT") {
+
                 await loadStudents();
             }
 
             initialized = true;
 
         } catch (error) {
+
+            retryRequired = true;
+
             message.textContent = error.message;
+
         } finally {
+
             busy = false;
+
             updateInterface();
         }
     }
 
+
     async function startLearningSession() {
-        if (busy || currentStudent || !studentSelect.value) {
+
+        if (
+            busy ||
+            !initialized ||
+            !studentSelect.value ||
+            ![
+                "NO_CONTEXT",
+                "NO_ELIGIBLE_ASSIGNMENT"
+            ].includes(sequenceStatus)
+        ) {
+
             return;
         }
 
         busy = true;
+
         message.textContent = "";
+
         updateInterface();
 
         try {
+
             const result = await apiRequest(
-                "/api/learning-session",
+
+                "/api/student-sequence",
+
                 "POST",
+
                 {student_id: studentSelect.value}
             );
 
-            currentStudent = result.student;
+            applySequenceResult(result);
 
-            launchAssignedActivity(result.assignment);
+            if (sequenceStatus === "ACTIVE") {
+
+                launchAssignedActivity(
+                    currentAssignment
+                );
+
+                return;
+            }
+
+            if (
+                sequenceStatus ===
+                "NO_ELIGIBLE_ASSIGNMENT"
+            ) {
+
+                message.textContent =
+                    "Şu anda başlayabileceğiniz " +
+                    "etkinlik bulunmuyor.";
+
+            } else {
+
+                throw new Error(
+                    "Beklenmeyen öğrenme oturumu durumu."
+                );
+            }
 
         } catch (error) {
+
+            retryRequired = true;
+
             message.textContent = error.message;
+
         } finally {
+
             busy = false;
+
             updateInterface();
         }
     }
 
-    async function endLearningSession() {
-        if (busy || !currentStudent) {
+
+    async function resetDashboard(result) {
+
+        applySequenceResult(result);
+
+        initialized = false;
+
+        await loadStudents();
+
+        studentSelect.value = "";
+
+        initialized = true;
+    }
+
+
+    async function continueLearningSession() {
+
+        if (
+            busy ||
+            retryRequired ||
+            sequenceStatus !== "ASSIGNMENT_COMPLETED" ||
+            !currentAssignment ||
+            !currentPerformanceSessionId
+        ) {
             return;
         }
 
         busy = true;
+
         message.textContent = "";
+
         updateInterface();
 
         try {
-            await apiRequest(
-                "/api/learning-session",
-                "DELETE"
+
+            const result = await apiRequest(
+                "/api/student-sequence/next",
+                "POST",
+                {
+                    assignment_id:
+                        currentAssignment.assignment_id,
+
+                    performance_session_id:
+                        currentPerformanceSessionId
+                }
             );
 
-            currentStudent = null;
-            initialized = false;
+            if (result.sequence_status === "ACTIVE") {
 
-            await loadStudents();
+                applySequenceResult(result);
 
-            studentSelect.value = "";
-            initialized = true;
+                launchAssignedActivity(currentAssignment);
+
+            } else if (
+                result.sequence_status === "SEQUENCE_COMPLETED"
+            ) {
+
+                await resetDashboard({
+                    sequence_status: "NO_CONTEXT",
+                    student: null,
+                    assignment: null
+                });
+
+                message.textContent =
+                    "Tebrikler! Bütün etkinliklerini tamamladın!";
+
+            } else {
+
+                throw new Error(
+                    "Sonraki etkinlik belirlenemedi."
+                );
+            }
 
         } catch (error) {
+
+            retryRequired = true;
+
             message.textContent = error.message;
+
         } finally {
+
             busy = false;
+
             updateInterface();
         }
     }
 
-    studentSelect.addEventListener("change", updateInterface);
+
+    async function endLearningSession() {
+
+        if (
+            busy ||
+            ![
+                "ACTIVE",
+                "ASSIGNMENT_COMPLETED",
+                "BETWEEN_ASSIGNMENTS"
+            ].includes(sequenceStatus)
+        ) {
+
+            return;
+        }
+
+        busy = true;
+
+        message.textContent = "";
+
+        updateInterface();
+
+        try {
+
+            const result = await apiRequest(
+                "/api/student-sequence",
+                "DELETE",
+                {
+                    student_id: currentStudent?.id || null,
+
+                    assignment_id:
+                        currentAssignment?.assignment_id || null,
+
+                    performance_session_id:
+                        currentPerformanceSessionId
+                }
+            );
+
+            await resetDashboard(result);
+
+        } catch (error) {
+
+            retryRequired = true;
+
+            message.textContent = error.message;
+
+        } finally {
+
+            busy = false;
+
+            updateInterface();
+        }
+    }
+
+
+    async function recoverLearningSession() {
+
+        if (
+            busy ||
+            sequenceStatus !== "STALE_CONTEXT"
+        ) {
+
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "Eski oturum bilgileri temizlensin mi?"
+        );
+
+        if (!confirmed) {
+
+            return;
+        }
+
+        busy = true;
+
+        message.textContent = "";
+
+        updateInterface();
+
+        try {
+
+            const result = await apiRequest(
+                "/api/student-sequence/recover",
+                "POST"
+            );
+
+            await resetDashboard(result);
+
+        } catch (error) {
+
+            retryRequired = true;
+
+            message.textContent = error.message;
+
+        } finally {
+
+            busy = false;
+
+            updateInterface();
+        }
+    }
+
+
+    studentSelect.addEventListener(
+        "change",
+        updateInterface
+    );
 
     startButton.addEventListener(
-        "click", startLearningSession
+        "click",
+        startLearningSession
     );
 
     endButton.addEventListener(
-        "click", endLearningSession
+        "click",
+        endLearningSession
+    );
+
+    continueButton.addEventListener(
+        "click",
+        continueLearningSession
+    );
+
+    recoverButton.addEventListener(
+        "click",
+        recoverLearningSession
+    );
+
+    retryButton.addEventListener(
+        "click",
+        initializeDashboard
     );
 
     initializeDashboard();
+
 </script>
 
 </body>

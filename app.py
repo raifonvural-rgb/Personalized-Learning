@@ -22,6 +22,14 @@ from performance_lifecycle import (
     get_bound_performance_session
 )
 from assignment_api import assignment_api
+from assignments_api import assignments_api
+from student_sequence_api import student_sequence_api
+from student_execution_api import student_execution_api
+from response_recovery_api import response_recovery_api
+
+from student_execution_context import require_bound_execution
+
+from performance_database import database_transaction
 
 app = Flask(__name__)
 
@@ -37,6 +45,10 @@ app.register_blueprint(profile_api)
 app.register_blueprint(active_student_api)
 app.register_blueprint(learning_session_api)
 app.register_blueprint(assignment_api)
+app.register_blueprint(assignments_api)
+app.register_blueprint(student_sequence_api)
+app.register_blueprint(student_execution_api)
+app.register_blueprint(response_recovery_api)
 
 ACHIEVEMENTS = [
     {"code": "MAT1.1.1", "title": "Rakamları gösterir", "type": "select"},
@@ -182,6 +194,85 @@ def get_assigned_learning_activity(activity_id):
         return None
 
     return activity
+
+
+@app.get("/student/assignment/<assignment_id>")
+def student_assignment_execution(assignment_id):
+
+    try:
+
+        with database_transaction() as connection:
+
+            version = connection.execute(
+                """
+                SELECT value
+                FROM schema_metadata
+                WHERE key = 'schema_version'
+                """
+            ).fetchone()
+
+            if (
+                version is None
+                or version["value"] != "2"
+            ):
+
+                return (
+                    "Öğrenme sistemi henüz kullanıma açılmadı.",
+                    503,
+                    {"Cache-Control": "no-store, max-age=0"}
+                )
+
+            context = require_bound_execution(
+                connection,
+                assignment_id
+            )
+
+            activity_id = context[
+                "assignment"
+            ]["activity_id"]
+
+        response = app.make_response(
+            render_template(
+                "student.html",
+                learning_mode=True,
+                learning_activity_id=activity_id,
+                assignment_execution_mode=True,
+                learning_assignment_id=assignment_id,
+            )
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, max-age=0"
+        )
+
+        return response
+
+    except sqlite3.Error:
+
+        app.logger.exception(
+            "Assignment execution storage failure."
+        )
+
+        return (
+            "Öğrenme oturumuna şu anda erişilemiyor.",
+            503,
+            {"Cache-Control": "no-store, max-age=0"}
+        )
+
+    except (ValueError, RuntimeError):
+
+        app.logger.warning(
+            "Assignment execution context rejected.",
+            exc_info=True
+        )
+
+        response = redirect("/student")
+
+        response.headers["Cache-Control"] = (
+            "no-store, max-age=0"
+        )
+
+        return response
 
 
 @app.route("/student/activity/<activity_id>")

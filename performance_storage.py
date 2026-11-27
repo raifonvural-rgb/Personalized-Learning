@@ -164,7 +164,8 @@ def next_event_sequence(connection, session_id):
     return row["next_sequence"]
 
 
-def create_learning_session(
+def create_learning_session_in_transaction(
+    connection,
     student_id,
     learning_mode,
     activity_snapshot,
@@ -178,6 +179,12 @@ def create_learning_session(
     Both records are committed together.
     """
 
+    if not connection.in_transaction:
+        raise RuntimeError(
+            "An active database transaction is required."
+        )
+
+
     record = build_session_record(
         student_id=student_id,
         learning_mode=learning_mode,
@@ -187,78 +194,100 @@ def create_learning_session(
         achievement_code=achievement_code
     )
 
-    with database_transaction(write=True) as connection:
 
-        assignment_id = record["assignment_id"]
+    assignment_id = record["assignment_id"]
 
-        if assignment_id is not None:
+    if assignment_id is not None:
 
-            existing = connection.execute(
-                '''
-                SELECT *
-                FROM learning_sessions
-                WHERE assignment_id = ?
-                  AND status = 'ACTIVE'
-                ''',
-                (assignment_id,)
-            ).fetchone()
+        existing = connection.execute(
+            '''
+            SELECT *
+            FROM learning_sessions
+            WHERE assignment_id = ?
+              AND status = 'ACTIVE'
+            ''',
+            (assignment_id,)
+        ).fetchone()
 
-            if existing is not None:
+        if existing is not None:
 
-                association_fields = (
-                    "student_id",
-                    "assignment_id",
-                    "activity_id",
-                    "achievement_code",
-                    "learning_mode"
-                )
+            association_fields = (
+                "student_id",
+                "assignment_id",
+                "activity_id",
+                "achievement_code",
+                "learning_mode"
+            )
 
-                for field in association_fields:
+            for field in association_fields:
 
-                    if existing[field] != record[field]:
-
-                        raise ValueError(
-                            "Active session association mismatch: "
-                            + field
-                        )
-
-                existing_snapshot = decode_json_object(
-                    existing["activity_snapshot"],
-                    "activity_snapshot"
-                )
-
-                requested_snapshot = decode_json_object(
-                    record["activity_snapshot"],
-                    "activity_snapshot"
-                )
-
-                if existing_snapshot != requested_snapshot:
+                if existing[field] != record[field]:
 
                     raise ValueError(
-                        "Active session configuration mismatch."
+                        "Active session association mismatch: "
+                        + field
                     )
 
-                return decode_session(existing)
+            existing_snapshot = decode_json_object(
+                existing["activity_snapshot"],
+                "activity_snapshot"
+            )
 
-        insert_session(connection, record)
+            requested_snapshot = decode_json_object(
+                record["activity_snapshot"],
+                "activity_snapshot"
+            )
 
-        event = build_event_record(
-            session_id=record["session_id"],
-            sequence_number=1,
-            event_type=EventType.SESSION_STARTED,
-            source=EventSource.SYSTEM,
-            occurred_at=record["started_at"],
-            payload={
-                "learning_mode": record["learning_mode"],
-                "assignment_id": record["assignment_id"],
-                "activity_id": record["activity_id"],
-                "achievement_code": record["achievement_code"]
-            }
-        )
+            if existing_snapshot != requested_snapshot:
 
-        insert_event(connection, event)
+                raise ValueError(
+                    "Active session configuration mismatch."
+                )
+
+            return decode_session(existing)
+
+    insert_session(connection, record)
+
+    event = build_event_record(
+        session_id=record["session_id"],
+        sequence_number=1,
+        event_type=EventType.SESSION_STARTED,
+        source=EventSource.SYSTEM,
+        occurred_at=record["started_at"],
+        payload={
+            "learning_mode": record["learning_mode"],
+            "assignment_id": record["assignment_id"],
+            "activity_id": record["activity_id"],
+            "achievement_code": record["achievement_code"]
+        }
+    )
+
+    insert_event(connection, event)
 
     return decode_session(record)
+
+
+def create_learning_session(
+    student_id,
+    learning_mode,
+    activity_snapshot,
+    assignment_id=None,
+    activity_id=None,
+    achievement_code=None
+):
+    """Execute using an independent write transaction."""
+
+    with database_transaction(write=True) as connection:
+
+        return create_learning_session_in_transaction(
+            connection=connection,
+            student_id=student_id,
+            learning_mode=learning_mode,
+            activity_snapshot=activity_snapshot,
+            assignment_id=assignment_id,
+            activity_id=activity_id,
+            achievement_code=achievement_code
+        )
 
 
 def get_learning_session(session_id):
@@ -365,7 +394,8 @@ def validate_event_associations(connection, record):
             )
 
 
-def append_performance_event(
+def append_performance_event_in_transaction(
+    connection,
     session_id,
     event_type,
     source,
@@ -381,6 +411,12 @@ def append_performance_event(
     Reusing an event identifier with identical content
     returns the original event instead of inserting a duplicate.
     """
+
+    if not connection.in_transaction:
+        raise RuntimeError(
+            "An active database transaction is required."
+        )
+
 
     session_id = validate_identifier(
         session_id,
@@ -401,23 +437,106 @@ def append_performance_event(
             "Lifecycle events require dedicated session operations."
         )
 
-    with database_transaction(write=True) as connection:
 
-        session = find_session(connection, session_id)
+    session = find_session(connection, session_id)
 
-        if session is None:
-            raise ValueError(
-                "Learning session does not exist."
-            )
-
-        sequence_number = next_event_sequence(
-            connection,
-            session_id
+    if session is None:
+        raise ValueError(
+            "Learning session does not exist."
         )
 
-        record = build_event_record(
+    sequence_number = next_event_sequence(
+        connection,
+        session_id
+    )
+
+    record = build_event_record(
+        session_id=session_id,
+        sequence_number=sequence_number,
+        event_type=event_type,
+        source=source,
+        payload=payload,
+        question_id=question_id,
+        attempt_id=attempt_id,
+        occurred_at=occurred_at,
+        event_id=event_id
+    )
+
+    existing = connection.execute(
+        """
+        SELECT *
+        FROM performance_events
+        WHERE event_id = ?
+        """,
+        (record["event_id"],)
+    ).fetchone()
+
+    if existing is not None:
+
+        comparison_fields = (
+            "session_id",
+            "question_id",
+            "attempt_id",
+            "event_type",
+            "source",
+            "payload",
+            "schema_version"
+        )
+
+        if any(
+            existing[field] != record[field]
+            for field in comparison_fields
+        ):
+            raise ValueError(
+                "Event identifier conflicts with existing data."
+            )
+
+        if (
+            occurred_at is not None
+            and existing["occurred_at"] != record["occurred_at"]
+        ):
+            raise ValueError(
+                "Event identifier conflicts with existing timestamp."
+            )
+
+        return decode_event(existing)
+
+    if (
+        session["status"] != SessionStatus.ACTIVE.value
+        and event_type !=
+        EventType.TEACHER_OBSERVATION_RECORDED.value
+    ):
+        raise ValueError(
+            "Learning session is no longer active."
+        )
+
+    validate_event_associations(
+        connection,
+        record
+    )
+
+    insert_event(connection, record)
+
+    return decode_event(record)
+
+
+def append_performance_event(
+    session_id,
+    event_type,
+    source,
+    payload,
+    question_id=None,
+    attempt_id=None,
+    occurred_at=None,
+    event_id=None
+):
+    """Append an event using an independent transaction."""
+
+    with database_transaction(write=True) as connection:
+
+        return append_performance_event_in_transaction(
+            connection=connection,
             session_id=session_id,
-            sequence_number=sequence_number,
             event_type=event_type,
             source=source,
             payload=payload,
@@ -427,65 +546,10 @@ def append_performance_event(
             event_id=event_id
         )
 
-        existing = connection.execute(
-            """
-            SELECT *
-            FROM performance_events
-            WHERE event_id = ?
-            """,
-            (record["event_id"],)
-        ).fetchone()
-
-        if existing is not None:
-
-            comparison_fields = (
-                "session_id",
-                "question_id",
-                "attempt_id",
-                "event_type",
-                "source",
-                "payload",
-                "schema_version"
-            )
-
-            if any(
-                existing[field] != record[field]
-                for field in comparison_fields
-            ):
-                raise ValueError(
-                    "Event identifier conflicts with existing data."
-                )
-
-            if (
-                occurred_at is not None
-                and existing["occurred_at"] != record["occurred_at"]
-            ):
-                raise ValueError(
-                    "Event identifier conflicts with existing timestamp."
-                )
-
-            return decode_event(existing)
-
-        if (
-            session["status"] != SessionStatus.ACTIVE.value
-            and event_type !=
-            EventType.TEACHER_OBSERVATION_RECORDED.value
-        ):
-            raise ValueError(
-                "Learning session is no longer active."
-            )
-
-        validate_event_associations(
-            connection,
-            record
-        )
-
-        insert_event(connection, record)
-
-        return decode_event(record)
 
 
-def end_learning_session(
+def end_learning_session_in_transaction(
+    connection,
     session_id,
     status=SessionStatus.TERMINATED,
     termination_reason=None
@@ -496,6 +560,12 @@ def end_learning_session(
     Repeated termination requests preserve the original
     termination record.
     """
+
+    if not connection.in_transaction:
+        raise RuntimeError(
+            "An active database transaction is required."
+        )
+
 
     session_id = validate_identifier(
         session_id,
@@ -521,56 +591,72 @@ def end_learning_session(
             "termination_reason"
         )
 
+
+    session = find_session(connection, session_id)
+
+    if session is None:
+        raise ValueError(
+            "Learning session does not exist."
+        )
+
+    if session["status"] != SessionStatus.ACTIVE.value:
+
+        return decode_session(session)
+
+    ended_at = utc_now()
+
+    connection.execute(
+        """
+        UPDATE learning_sessions
+        SET ended_at = ?,
+            status = ?,
+            termination_reason = ?
+        WHERE session_id = ?
+        """,
+        (
+            ended_at,
+            status,
+            termination_reason,
+            session_id
+        )
+    )
+
+    event = build_event_record(
+        session_id=session_id,
+        sequence_number=next_event_sequence(
+            connection,
+            session_id
+        ),
+        event_type=EventType.SESSION_ENDED,
+        source=EventSource.SYSTEM,
+        occurred_at=ended_at,
+        payload={
+            "status": status,
+            "termination_reason": termination_reason
+        }
+    )
+
+    insert_event(connection, event)
+
+    return decode_session(
+        find_session(connection, session_id)
+    )
+
+
+def end_learning_session(
+    session_id,
+    status=SessionStatus.TERMINATED,
+    termination_reason=None
+):
+    """Execute using an independent write transaction."""
+
     with database_transaction(write=True) as connection:
 
-        session = find_session(connection, session_id)
-
-        if session is None:
-            raise ValueError(
-                "Learning session does not exist."
-            )
-
-        if session["status"] != SessionStatus.ACTIVE.value:
-
-            return decode_session(session)
-
-        ended_at = utc_now()
-
-        connection.execute(
-            """
-            UPDATE learning_sessions
-            SET ended_at = ?,
-                status = ?,
-                termination_reason = ?
-            WHERE session_id = ?
-            """,
-            (
-                ended_at,
-                status,
-                termination_reason,
-                session_id
-            )
-        )
-
-        event = build_event_record(
+        return end_learning_session_in_transaction(
+            connection=connection,
             session_id=session_id,
-            sequence_number=next_event_sequence(
-                connection,
-                session_id
-            ),
-            event_type=EventType.SESSION_ENDED,
-            source=EventSource.SYSTEM,
-            occurred_at=ended_at,
-            payload={
-                "status": status,
-                "termination_reason": termination_reason
-            }
-        )
-
-        insert_event(connection, event)
-
-        return decode_session(
-            find_session(connection, session_id)
+            status=status,
+            termination_reason=termination_reason
         )
 
 

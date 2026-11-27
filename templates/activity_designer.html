@@ -174,6 +174,154 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
     background:white;
     padding:15px;
 }
+
+.assignment-statistics {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 18px 0;
+}
+
+.assignment-statistics[hidden] {
+    display: none;
+}
+
+.assignment-statistic {
+    background: #f8fafc;
+    border: 1px solid #e0e6ef;
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.assignment-statistic-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.assignment-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid #e0e6ef;
+}
+
+.assignment-info {
+    flex: 1;
+    min-width: 180px;
+}
+
+.assignment-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.assignment-position {
+    font-weight: 700;
+    color: #64748b;
+    min-width: 28px;
+}
+
+.assignment-status {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.assignment-status-pending {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.assignment-status-in-progress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.assignment-status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.assignment-status-cancelled {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.assignment-disabled .assignment-info {
+    opacity: 0.7;
+}
+
+
+.assignment-enabled-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid #e0e6ef;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.assignment-enabled-control input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: #2563eb;
+    cursor: pointer;
+}
+
+.assignment-enabled-control input:disabled {
+    cursor: wait;
+}
+
+
+.assignment-order-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.assignment-order-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+
+.assignment-cancel-button {
+    background: #fff;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    min-height: 44px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.assignment-cancel-button:hover:not(:disabled) {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.assignment-cancel-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 </style>
 </head>
 <body>
@@ -401,6 +549,49 @@ button.secondary { background:#eaf0fa; color:var(--navy); }
                 Listeyi Yenile
             </button>
         </div>
+    </section>
+
+    <section class="panel" id="assignmentManagementPanel">
+
+        <h2>5. Öğrenciye Atanan Etkinlikler</h2>
+
+        <p class="muted">
+            Öğrencinin tamamlayacağı etkinlikleri,
+            etkinlik sırasını ve atama durumlarını
+            bu bölümden yönetebilirsiniz.
+        </p>
+
+        <div id="assignmentStatistics"
+             class="assignment-statistics"
+             aria-live="polite"
+             hidden>
+        </div>
+
+        <div id="studentAssignmentsList"
+             aria-live="polite">
+            Atama yönetimi hazırlanıyor...
+        </div>
+
+        <p id="assignmentManagementMessage"
+           role="status"
+           aria-live="polite">
+        </p>
+
+        <div class="actions">
+            <button type="button"
+                    id="refreshAssignmentsButton"
+                    class="secondary"
+                    disabled>
+                Atama Listesini Yenile
+            </button>
+        </div>
+
+        <p class="muted">
+            Devre dışı bırakılan etkinlikler öğrenciye
+            sunulmaz. Tamamlanan ve iptal edilen
+            atamaların geçmiş kayıtları korunur.
+        </p>
+
     </section>
 
 </main>
@@ -918,21 +1109,6 @@ async function loadSavedActivities() {
             throw new Error(result.error || "Etkinlikler yüklenemedi.");
         }
 
-        const assignmentResponse = await fetch(
-            "/api/activity-assignment",
-            {cache: "no-store"}
-        );
-
-        const assignmentResult = await assignmentResponse.json();
-
-        if (!assignmentResponse.ok || !assignmentResult.ok) {
-            throw new Error(
-                assignmentResult.error || "Atama bilgisi alınamadı."
-            );
-        }
-
-        const currentAssignment = assignmentResult.assignment;
-
         container.replaceChildren();
 
         if (!result.activities.length) {
@@ -986,47 +1162,27 @@ async function loadSavedActivities() {
                 assignButton.style.background = "#2563eb";
                 assignButton.style.color = "white";
 
+                assignButton.classList.add(
+                    "create-assignment-button"
+                );
+
+                assignButton.disabled =
+                    assignmentOperationInProgress;
+
                 assignButton.addEventListener("click", async () => {
-                    assignButton.disabled = true;
 
-                    try {
-                        const response = await fetch(
-                            "/api/activity-assignment",
-                            {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json"
-                                },
-                                body: JSON.stringify({
-                                    activity_id: activity.id
-                                })
-                            }
-                        );
+                    await executeAssignmentOperation(
 
-                        const result = await response.json();
+                        "/api/activity-assignments",
 
-                        if (!response.ok || !result.ok) {
-                            throw new Error(
-                                result.error || "Etkinlik atanamadı."
-                            );
+                        "POST",
+
+                        {
+                            activity_id: activity.id,
+                            enabled: true
                         }
-
-                        await loadSavedActivities();
-
-                    } catch (error) {
-                        alert(error.message);
-                        assignButton.disabled = false;
-                    }
+                    );
                 });
-
-                if (
-                    currentAssignment &&
-                    currentAssignment.activity_id === activity.id
-                ) {
-                    assignButton.textContent = "Atandı";
-                    assignButton.style.background = "#15803d";
-                    assignButton.disabled = true;
-                }
 
                 const actions = document.createElement("div");
                 actions.style.cssText =
@@ -1045,6 +1201,817 @@ async function loadSavedActivities() {
         container.className = "error";
     }
 }
+
+
+// Multiple-assignment management.
+
+let studentAssignments = [];
+
+let assignmentOperationInProgress = false;
+
+
+async function executeAssignmentOperation(
+    url,
+    method,
+    payload = null
+) {
+
+    if (assignmentOperationInProgress) {
+
+        return false;
+    }
+
+    assignmentOperationInProgress = true;
+
+    const container = document.getElementById(
+        "studentAssignmentsList"
+    );
+
+    const refreshButton = document.getElementById(
+        "refreshAssignmentsButton"
+    );
+
+    const controls = Array.from(
+        document.querySelectorAll(
+            "#studentAssignmentsList button, " +
+            "#studentAssignmentsList input, " +
+            ".create-assignment-button"
+        )
+    );
+
+    const previousStates = controls.map(
+        control => control.disabled
+    );
+
+    controls.forEach(control => {
+        control.disabled = true;
+    });
+
+    refreshButton.disabled = true;
+
+    setAssignmentManagementMessage("");
+
+    try {
+
+        const options = {
+            method: method,
+            cache: "no-store"
+        };
+
+        if (payload !== null) {
+
+            options.headers = {
+                "Content-Type": "application/json"
+            };
+
+            options.body = JSON.stringify(payload);
+        }
+
+        const response = await fetch(url, options);
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+
+            throw new Error(
+                result.error ||
+                "Atama işlemi tamamlanamadı."
+            );
+        }
+
+        const refreshed =
+            await loadStudentAssignments();
+
+        if (refreshed) {
+
+            setAssignmentManagementMessage(
+                result.message ||
+                "Atama güncellendi."
+            );
+
+        } else {
+
+            setAssignmentManagementMessage(
+                "İşlem tamamlandı ancak liste " +
+                "yenilenemedi. Listeyi yenileyiniz.",
+                true
+            );
+        }
+
+        return true;
+
+    } catch (error) {
+
+        await loadStudentAssignments();
+
+        setAssignmentManagementMessage(
+            error.message,
+            true
+        );
+
+        return false;
+
+    } finally {
+
+        assignmentOperationInProgress = false;
+
+        document.querySelectorAll(
+            ".create-assignment-button"
+        ).forEach(button => {
+
+            button.disabled = false;
+        });
+
+        controls.forEach((control, index) => {
+
+            if (control.isConnected) {
+
+                control.disabled =
+                    previousStates[index];
+            }
+        });
+
+        refreshButton.disabled = false;
+    }
+}
+
+
+async function updateAssignmentEnabled(
+    assignmentId,
+    enabled
+) {
+
+    return executeAssignmentOperation(
+
+        "/api/activity-assignments/" +
+            encodeURIComponent(assignmentId) +
+            "/enabled",
+
+        "PATCH",
+
+        {enabled: enabled}
+    );
+}
+
+
+
+const assignmentStatusLabels = {
+    PENDING: "Bekliyor",
+    IN_PROGRESS: "Devam Ediyor",
+    COMPLETED: "Tamamlandı",
+    CANCELLED: "İptal Edildi"
+};
+
+
+function getAssignmentTitle(assignment) {
+
+    const activity = assignment.activity;
+
+    if (!activity) {
+
+        return "Etkinlik artık mevcut değil";
+    }
+
+    switch (activity.activity_type) {
+
+        case "find_digit":
+
+            return "Rakamı Bul — Hedef: " +
+                activity.target_digit;
+
+        case "number_to_quantity":
+
+            return "Rakamdan Miktara — Hedef: " +
+                activity.target_quantity;
+
+        case "quantity_to_number":
+
+            return "Miktardan Rakama — Hedef: " +
+                activity.target_quantity;
+
+        default:
+
+            return activity.achievement_code ||
+                "Etkinlik";
+    }
+}
+
+
+function setAssignmentManagementMessage(
+    message,
+    isError = false
+) {
+
+    const element = document.getElementById(
+        "assignmentManagementMessage"
+    );
+
+    element.textContent = message;
+
+    element.style.color = isError
+        ? "#b91c1c"
+        : "#166534";
+}
+
+
+async function cancelAssignment(assignmentId) {
+
+    if (assignmentOperationInProgress) {
+
+        return false;
+    }
+
+    const assignment = studentAssignments.find(
+        item => item.assignment_id === assignmentId
+    );
+
+    if (
+        !assignment ||
+        assignment.status !== "PENDING" ||
+        !assignment.allowed_operations ||
+        !assignment.allowed_operations.cancel
+    ) {
+
+        return false;
+    }
+
+    const confirmed = window.confirm(
+
+        getAssignmentTitle(assignment) +
+
+        "\\n\\nBu etkinlik atamasını iptal etmek " +
+        "istediğinizden emin misiniz?" +
+
+        "\\n\\nAtama geçmişi korunacaktır. " +
+        "Kaydedilmiş etkinlik silinmeyecektir."
+    );
+
+    if (!confirmed) {
+
+        return false;
+    }
+
+    return executeAssignmentOperation(
+
+        "/api/activity-assignments/" +
+            encodeURIComponent(assignmentId),
+
+        "DELETE"
+    );
+}
+
+
+async function moveAssignment(
+    assignmentId,
+    direction
+) {
+
+    if (assignmentOperationInProgress) {
+
+        return false;
+    }
+
+    if (direction !== -1 && direction !== 1) {
+
+        return false;
+    }
+
+    const pendingIds = studentAssignments
+        .filter(
+            assignment =>
+                assignment.status === "PENDING"
+        )
+        .map(
+            assignment =>
+                assignment.assignment_id
+        );
+
+    const currentIndex = pendingIds.indexOf(
+        assignmentId
+    );
+
+    if (currentIndex === -1) {
+
+        return false;
+    }
+
+    const targetIndex =
+        currentIndex + direction;
+
+    if (
+        targetIndex < 0 ||
+        targetIndex >= pendingIds.length
+    ) {
+
+        return false;
+    }
+
+    [
+        pendingIds[currentIndex],
+        pendingIds[targetIndex]
+    ] = [
+        pendingIds[targetIndex],
+        pendingIds[currentIndex]
+    ];
+
+    return executeAssignmentOperation(
+
+        "/api/activity-assignments/order",
+
+        "PUT",
+
+        {assignment_ids: pendingIds}
+    );
+}
+
+
+function renderAssignmentStatistics() {
+
+    const container = document.getElementById(
+        "assignmentStatistics"
+    );
+
+    const statistics = [
+
+        {
+            label: "Toplam Atama",
+            value: studentAssignments.length,
+            color: "#1e293b"
+        },
+
+        {
+            label: "Tamamlanan",
+            value: studentAssignments.filter(
+                item => item.status === "COMPLETED"
+            ).length,
+            color: "#166534"
+        },
+
+        {
+            label: "Devam Eden",
+            value: studentAssignments.filter(
+                item => item.status === "IN_PROGRESS"
+            ).length,
+            color: "#1d4ed8"
+        },
+
+        {
+            label: "Etkin ve Bekleyen",
+            value: studentAssignments.filter(
+                item =>
+                    item.status === "PENDING" &&
+                    item.enabled
+            ).length,
+            color: "#1e293b"
+        },
+
+        {
+            label: "Devre Dışı",
+            value: studentAssignments.filter(
+                item =>
+                    item.status === "PENDING" &&
+                    !item.enabled
+            ).length,
+            color: "#64748b"
+        },
+
+        {
+            label: "İptal Edilen",
+            value: studentAssignments.filter(
+                item => item.status === "CANCELLED"
+            ).length,
+            color: "#64748b"
+        }
+    ];
+
+    container.replaceChildren();
+
+    for (const statistic of statistics) {
+
+        const card = document.createElement("div");
+
+        card.className = "assignment-statistic";
+
+        const value = document.createElement("span");
+
+        value.className =
+            "assignment-statistic-value";
+
+        value.textContent = statistic.value;
+
+        value.style.color = statistic.color;
+
+        const label = document.createElement("span");
+
+        label.className = "muted";
+
+        label.textContent = statistic.label;
+
+        card.appendChild(value);
+
+        card.appendChild(label);
+
+        container.appendChild(card);
+    }
+
+    container.hidden = false;
+}
+
+
+function hideAssignmentStatistics() {
+
+    const container = document.getElementById(
+        "assignmentStatistics"
+    );
+
+    container.hidden = true;
+
+    container.replaceChildren();
+}
+
+
+function renderStudentAssignments() {
+
+    const container = document.getElementById(
+        "studentAssignmentsList"
+    );
+
+    container.replaceChildren();
+
+    if (!studentAssignments.length) {
+
+        container.textContent =
+            "Öğrenciye henüz etkinlik atanmamış.";
+
+        return;
+    }
+
+    const pendingIds = studentAssignments
+        .filter(
+            assignment =>
+                assignment.status === "PENDING"
+        )
+        .map(
+            assignment =>
+                assignment.assignment_id
+        );
+
+    for (const assignment of studentAssignments) {
+
+        const row = document.createElement("div");
+
+        row.className = "assignment-row";
+
+        if (
+            assignment.status === "PENDING" &&
+            !assignment.enabled
+        ) {
+
+            row.classList.add(
+                "assignment-disabled"
+            );
+        }
+
+        const position = document.createElement(
+            "span"
+        );
+
+        position.className = "assignment-position";
+
+        position.textContent =
+            assignment.sequence_order + ".";
+
+        const info = document.createElement("div");
+
+        info.className = "assignment-info";
+
+        const title = document.createElement(
+            "strong"
+        );
+
+        title.textContent =
+            getAssignmentTitle(assignment);
+
+        const statusLine = document.createElement(
+            "div"
+        );
+
+        statusLine.style.marginTop = "6px";
+
+        const status = document.createElement(
+            "span"
+        );
+
+        status.className =
+            "assignment-status assignment-status-" +
+            assignment.status
+                .toLowerCase()
+                .replaceAll("_", "-");
+
+        status.textContent =
+            assignmentStatusLabels[
+                assignment.status
+            ] || assignment.status;
+
+        statusLine.appendChild(status);
+
+        if (
+            assignment.status === "PENDING" &&
+            !assignment.enabled
+        ) {
+
+            const disabledLabel =
+                document.createElement("span");
+
+            disabledLabel.className = "muted";
+
+            disabledLabel.textContent =
+                " — Devre dışı";
+
+            statusLine.appendChild(
+                disabledLabel
+            );
+        }
+
+        info.appendChild(title);
+
+        info.appendChild(statusLine);
+
+        const actions = document.createElement(
+            "div"
+        );
+
+        actions.className = "assignment-actions";
+
+        if (
+            assignment.allowed_operations &&
+            assignment.allowed_operations.reorder
+        ) {
+
+            const pendingIndex = pendingIds.indexOf(
+                assignment.assignment_id
+            );
+
+            const moveUpButton =
+                document.createElement("button");
+
+            moveUpButton.type = "button";
+
+            moveUpButton.className =
+                "secondary assignment-order-button";
+
+            moveUpButton.textContent = "↑";
+
+            moveUpButton.title = "Yukarı taşı";
+
+            moveUpButton.setAttribute(
+                "aria-label",
+                getAssignmentTitle(assignment) +
+                " — Yukarı taşı"
+            );
+
+            moveUpButton.disabled =
+                pendingIndex <= 0;
+
+            moveUpButton.addEventListener(
+                "click",
+                () => moveAssignment(
+                    assignment.assignment_id,
+                    -1
+                )
+            );
+
+            const moveDownButton =
+                document.createElement("button");
+
+            moveDownButton.type = "button";
+
+            moveDownButton.className =
+                "secondary assignment-order-button";
+
+            moveDownButton.textContent = "↓";
+
+            moveDownButton.title = "Aşağı taşı";
+
+            moveDownButton.setAttribute(
+                "aria-label",
+                getAssignmentTitle(assignment) +
+                " — Aşağı taşı"
+            );
+
+            moveDownButton.disabled =
+                pendingIndex < 0 ||
+                pendingIndex >= pendingIds.length - 1;
+
+            moveDownButton.addEventListener(
+                "click",
+                () => moveAssignment(
+                    assignment.assignment_id,
+                    1
+                )
+            );
+
+            actions.appendChild(moveUpButton);
+
+            actions.appendChild(moveDownButton);
+        }
+
+        if (
+            assignment.allowed_operations &&
+            assignment.allowed_operations.enable_disable
+        ) {
+
+            const enabledLabel =
+                document.createElement("label");
+
+            enabledLabel.className =
+                "assignment-enabled-control";
+
+            const enabledCheckbox =
+                document.createElement("input");
+
+            enabledCheckbox.type = "checkbox";
+
+            enabledCheckbox.checked =
+                assignment.enabled;
+
+            enabledCheckbox.setAttribute(
+                "aria-label",
+                getAssignmentTitle(assignment) +
+                " — Etkinleştir"
+            );
+
+            enabledCheckbox.addEventListener(
+                "change",
+                async () => {
+
+                    const requestedValue =
+                        enabledCheckbox.checked;
+
+                    enabledCheckbox.checked =
+                        assignment.enabled;
+
+                    await updateAssignmentEnabled(
+                        assignment.assignment_id,
+                        requestedValue
+                    );
+                }
+            );
+
+            const enabledText =
+                document.createElement("span");
+
+            enabledText.textContent = "Etkin";
+
+            enabledLabel.appendChild(
+                enabledCheckbox
+            );
+
+            enabledLabel.appendChild(
+                enabledText
+            );
+
+            actions.appendChild(enabledLabel);
+        }
+
+        if (
+            assignment.allowed_operations &&
+            assignment.allowed_operations.cancel
+        ) {
+
+            const cancelButton =
+                document.createElement("button");
+
+            cancelButton.type = "button";
+
+            cancelButton.className =
+                "assignment-cancel-button";
+
+            cancelButton.textContent =
+                "İptal Et";
+
+            cancelButton.setAttribute(
+                "aria-label",
+                getAssignmentTitle(assignment) +
+                " — Atamayı iptal et"
+            );
+
+            cancelButton.addEventListener(
+                "click",
+                () => cancelAssignment(
+                    assignment.assignment_id
+                )
+            );
+
+            actions.appendChild(cancelButton);
+        }
+
+        row.appendChild(position);
+
+        row.appendChild(info);
+
+        row.appendChild(actions);
+
+        container.appendChild(row);
+    }
+}
+
+
+async function loadStudentAssignments() {
+
+    const container = document.getElementById(
+        "studentAssignmentsList"
+    );
+
+    const refreshButton = document.getElementById(
+        "refreshAssignmentsButton"
+    );
+
+    refreshButton.disabled = true;
+
+    container.textContent =
+        "Atamalar yükleniyor...";
+
+    hideAssignmentStatistics();
+
+    setAssignmentManagementMessage("");
+
+    try {
+
+        const response = await fetch(
+            "/api/activity-assignments",
+            {cache: "no-store"}
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+
+            throw new Error(
+                result.error ||
+                "Atamalar yüklenemedi."
+            );
+        }
+
+        if (!Array.isArray(result.assignments)) {
+
+            throw new Error(
+                "Geçersiz atama listesi."
+            );
+        }
+
+        studentAssignments = result.assignments;
+
+        renderStudentAssignments();
+
+        renderAssignmentStatistics();
+
+        return true;
+
+    } catch (error) {
+
+        studentAssignments = [];
+
+        hideAssignmentStatistics();
+
+        container.textContent =
+            "Atama listesi görüntülenemiyor.";
+
+        setAssignmentManagementMessage(
+            error.message,
+            true
+        );
+
+        return false;
+
+    } finally {
+
+        refreshButton.disabled = false;
+    }
+}
+
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        document.getElementById(
+            "refreshAssignmentsButton"
+        ).addEventListener(
+            "click",
+            () => {
+
+                if (!assignmentOperationInProgress) {
+
+                    loadStudentAssignments();
+                }
+            }
+        );
+
+        loadStudentAssignments();
+    }
+);
+
 
 document.addEventListener("DOMContentLoaded", loadSavedActivities);
 

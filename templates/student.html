@@ -634,12 +634,37 @@
         <div class="activity-layout">
           <div class="selection-area">
         <div class="cards" id="cards">
+            {% if not (assignment_execution_mode | default(false)) %}
             <button class="number-card" onclick="chooseNumber(3)">3</button>
             <button class="number-card" onclick="chooseNumber(5)">5</button>
             <button class="number-card" onclick="chooseNumber(8)">8</button>
+            {% endif %}
         </div>
 
         <div id="feedback" role="status" aria-live="polite"></div>
+
+        {% if assignment_execution_mode | default(false) %}
+
+        <div id="assignmentRecoveryPanel"
+             hidden
+             style="text-align:center; margin:16px auto;">
+
+            <p id="assignmentRecoveryMessage"
+               role="status"
+               aria-live="polite"></p>
+
+            <button id="assignmentRecoveryButton"
+                    type="button"
+                    class="control-button secondary"
+                    onclick="reconcileAssignmentExecution()">
+
+                Tekrar Bağlan
+
+            </button>
+
+        </div>
+
+        {% endif %}
 
           </div>
         <section id="tracing-panel" class="tracing-panel" hidden>
@@ -687,6 +712,10 @@
     </main>
 
 
+    {% if assignment_execution_mode | default(false) %}
+    <script src="{{ url_for('static', filename='js/student_execution.js') }}"></script>
+    {% endif %}
+
     <script>
         const params = new URLSearchParams(window.location.search);
 
@@ -712,6 +741,52 @@
         }
 
         function speakInstruction() {
+
+            if (assignmentExecutionMode) {
+
+                const question =
+                    studentExecutionController
+                        ?.currentQuestion;
+
+                const presentation =
+                    question?.presentation;
+
+                if (
+                    !presentation ||
+
+                    presentation.presentation_context
+                        ?.audio_enabled !== true
+                ) {
+
+                    return;
+                }
+
+                if (!("speechSynthesis" in window)) {
+
+                    feedback.textContent =
+                        "Sesli yönerge desteklenmiyor.";
+
+                    return;
+                }
+
+                window.speechSynthesis.cancel();
+
+                const utterance =
+                    new SpeechSynthesisUtterance(
+                        presentation.instruction
+                    );
+
+                utterance.lang = "tr-TR";
+
+                utterance.rate = 0.85;
+
+                window.speechSynthesis.speak(
+                    utterance
+                );
+
+                return;
+            }
+
             if (isQuantityDraft(teacherPreviewDraft)) {
                 speakQuantityInstruction(teacherPreviewDraft);
                 return;
@@ -894,6 +969,14 @@
         tracingCanvas.addEventListener('pointercancel', stopTracing);
         tracingCanvas.addEventListener('lostpointercapture', stopTracing);
 
+
+        const assignmentExecutionMode =
+            {{ assignment_execution_mode | default(false) | tojson }};
+
+        const learningAssignmentId =
+            {{ learning_assignment_id | default(none) | tojson }};
+
+        let studentExecutionController = null;
 
         const learningMode =
             {{ learning_mode | default(false) | tojson }};
@@ -1487,15 +1570,1491 @@
             showTeacherQuestion();
         }
 
-        if (learningMode || teacherPreviewMode) {
+        function renderAssignmentDigitQuestion(
+            question
+        ) {
+
+            const presentation = question.presentation;
+
+            if (presentation.activity_type !== "find_digit") {
+
+                throw new Error(
+                    "Geçersiz rakam tanıma etkinliği."
+                );
+            }
+
+            const context =
+                presentation.presentation_context;
+
+            const choices =
+                presentation.presented_choices;
+
+            if (
+                !context ||
+
+                !Array.isArray(choices) ||
+
+                choices.length < 2 ||
+
+                choices.length > 10 ||
+
+                !choices.every(choice =>
+
+                    choice.type === "numeral" &&
+
+                    Number.isInteger(choice.value) &&
+
+                    choice.value >= 0 &&
+
+                    choice.value <= 9
+                ) ||
+
+                new Set(
+                    choices.map(choice => choice.value)
+                ).size !== choices.length
+            ) {
+
+                throw new Error(
+                    "Geçersiz rakam seçenekleri."
+                );
+            }
+
+            const allowedLayouts = [
+
+                "balloons",
+
+                "flower_petals",
+
+                "object_cards"
+            ];
+
+            if (
+                !allowedLayouts.includes(
+                    context.layout_id
+                )
+            ) {
+
+                throw new Error(
+                    "Geçersiz etkinlik yerleşimi."
+                );
+            }
+
+            clearQuantityAnimation();
+
+            cards.replaceChildren();
+
+            document.querySelector("main.activity")
+                .classList.remove("quantity-mode");
+
+            document.getElementById("activityHeading")
+                .textContent = "Rakamları Öğreniyorum";
+
+            document.getElementById("activityLabel")
+                .textContent =
+                    "MAT1.1.1 — Rakamları gösterir";
+
+            const quantityQuestion =
+                document.getElementById(
+                    "quantity-question"
+                );
+
+            quantityQuestion.replaceChildren();
+
+            quantityQuestion.hidden = true;
+
+            document.getElementById(
+                "tracing-panel"
+            ).hidden = true;
+
+            cards.classList.remove(
+
+                "layout-balloons",
+
+                "layout-flower_petals",
+
+                "layout-object_cards",
+
+                "layout-quantity"
+            );
+
+            cards.classList.add(
+                "layout-" + context.layout_id
+            );
+
+            instruction.textContent =
+                presentation.instruction;
+
+            listenButton.hidden =
+                context.audio_enabled !== true;
+
+            nextButton.hidden = true;
+
+            nextButton.disabled = true;
+
+            for (
+                let position = 0;
+                position < choices.length;
+                position++
+            ) {
+
+                const choice = choices[position];
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.className = "number-card";
+
+                button.disabled = true;
+
+                button.dataset.selectedPosition =
+                    String(position);
+
+                button.setAttribute(
+                    "aria-label",
+                    String(choice.value)
+                );
+
+                if (
+                    context.layout_id === "object_cards"
+                ) {
+
+                    const image =
+                        document.createElement("img");
+
+                    image.src = quantityAssetUrl(
+                        context.visual_id
+                    );
+
+                    image.alt = "";
+
+                    image.draggable = false;
+
+                    image.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    const digit =
+                        document.createElement("span");
+
+                    digit.textContent = choice.value;
+
+                    button.append(image, digit);
+
+                } else {
+
+                    button.textContent = choice.value;
+                }
+
+                button.addEventListener(
+                    "click",
+                    () => submitAssignmentAnswer(
+                        position
+                    )
+                );
+
+                cards.appendChild(button);
+            }
+        }
+
+
+        function validateAssignmentQuantityItem(
+            item,
+            expectedType
+        ) {
+
+            if (!item || item.type !== expectedType) {
+
+                throw new Error(
+                    "Geçersiz miktar etkinliği öğesi."
+                );
+            }
+
+            if (expectedType === "numeral") {
+
+                if (
+                    !Number.isInteger(item.value) ||
+
+                    item.value < 0 ||
+
+                    item.value > 9
+                ) {
+
+                    throw new Error(
+                        "Geçersiz sayı değeri."
+                    );
+                }
+
+                return;
+            }
+
+            if (
+                !Number.isInteger(item.quantity) ||
+
+                item.quantity < 0 ||
+
+                item.quantity > 9 ||
+
+                !Array.isArray(item.objects) ||
+
+                item.objects.length !== item.quantity
+            ) {
+
+                throw new Error(
+                    "Geçersiz nesne grubu."
+                );
+            }
+
+            for (const object of item.objects) {
+
+                quantityAssetUrl(object.visual_id);
+            }
+        }
+
+
+        function renderAssignmentQuantityQuestion(
+            question
+        ) {
+
+            const presentation =
+                question.presentation;
+
+            const activityType =
+                presentation.activity_type;
+
+            if (![
+                "number_to_quantity",
+                "quantity_to_number"
+            ].includes(activityType)) {
+
+                throw new Error(
+                    "Geçersiz miktar etkinliği."
+                );
+            }
+
+            const context =
+                presentation.presentation_context;
+
+            const choices =
+                presentation.presented_choices;
+
+            const questionItem =
+                presentation.question;
+
+            if (
+                !context ||
+
+                typeof context.arrangement !== "string" ||
+
+                !Array.isArray(choices) ||
+
+                choices.length < 2
+            ) {
+
+                throw new Error(
+                    "Geçersiz miktar etkinliği sunumu."
+                );
+            }
+
+            const numberToQuantity =
+                activityType === "number_to_quantity";
+
+            const questionType = numberToQuantity
+                ? "numeral"
+                : "object_group";
+
+            const choiceType = numberToQuantity
+                ? "object_group"
+                : "numeral";
+
+            validateAssignmentQuantityItem(
+                questionItem,
+                questionType
+            );
+
+            for (const choice of choices) {
+
+                validateAssignmentQuantityItem(
+                    choice,
+                    choiceType
+                );
+            }
+
+            clearQuantityAnimation();
+
+            document.querySelector("main.activity")
+                .classList.add("quantity-mode");
+
+            document.getElementById("activityHeading")
+                .textContent = "Miktarları Öğreniyorum";
+
+            document.getElementById("activityLabel")
+                .textContent = numberToQuantity
+                    ? "Rakamdan miktara"
+                    : "Miktardan rakama";
+
+            document.getElementById(
+                "tracing-panel"
+            ).hidden = true;
+
+            instruction.textContent =
+                presentation.instruction;
+
+            listenButton.hidden =
+                context.audio_enabled !== true;
+
+            nextButton.hidden = true;
+
+            nextButton.disabled = true;
+
+            cards.className = "cards layout-quantity";
+
+            cards.replaceChildren();
+
+            const questionContainer =
+                document.getElementById(
+                    "quantity-question"
+                );
+
+            questionContainer.replaceChildren();
+
+            questionContainer.hidden = false;
+
+            if (numberToQuantity) {
+
+                const numeral =
+                    document.createElement("div");
+
+                numeral.className = "quantity-target";
+
+                numeral.textContent =
+                    questionItem.value;
+
+                questionContainer.appendChild(
+                    numeral
+                );
+
+            } else {
+
+                questionContainer.appendChild(
+
+                    createStudentQuantityGroup(
+                        questionItem,
+                        context.arrangement
+                    )
+                );
+            }
+
+            choices.forEach((choice, position) => {
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.className = "quantity-answer";
+
+                button.disabled = true;
+
+                button.dataset.selectedPosition =
+                    String(position);
+
+                if (choice.type === "numeral") {
+
+                    button.classList.add(
+                        "numeral-answer"
+                    );
+
+                    button.textContent = choice.value;
+
+                    button.setAttribute(
+                        "aria-label",
+                        String(choice.value)
+                    );
+
+                } else {
+
+                    button.setAttribute(
+                        "aria-label",
+                        "Nesne grubu " + (position + 1)
+                    );
+
+                    button.appendChild(
+
+                        createStudentQuantityGroup(
+                            choice,
+                            context.arrangement
+                        )
+                    );
+                }
+
+                button.addEventListener(
+                    "click",
+                    () => submitAssignmentAnswer(
+                        position
+                    )
+                );
+
+                cards.appendChild(button);
+            });
+        }
+
+
+        let assignmentInteractionBusy = false;
+
+        let latestResponseInspection = null;
+
+        let assignmentVisualReadiness = {
+
+            questionId: null,
+
+            generation: 0,
+
+            status: "NOT_INITIALIZED",
+
+            totalAssets: 0,
+
+            loadedAssets: 0,
+
+            failedAssets: 0
+        };
+
+
+        function resetAssignmentVisualReadiness(
+            questionId
+        ) {
+
+            if (
+                typeof questionId !== "string" ||
+                !questionId.trim()
+            ) {
+
+                throw new Error(
+                    "Görsel kontrolü için soru kimliği gerekli."
+                );
+            }
+
+            assignmentVisualReadiness = {
+
+                questionId: questionId,
+
+                generation:
+                    assignmentVisualReadiness.generation + 1,
+
+                status: "LOADING",
+
+                totalAssets: 0,
+
+                loadedAssets: 0,
+
+                failedAssets: 0
+            };
+
+            return assignmentVisualReadiness.generation;
+        }
+
+
+        function isCurrentVisualGeneration(
+            questionId,
+            generation
+        ) {
+
+            return (
+
+                assignmentVisualReadiness.questionId
+                    === questionId &&
+
+                assignmentVisualReadiness.generation
+                    === generation
+            );
+        }
+
+
+        function areAssignmentVisualsReady(
+            questionId
+        ) {
+
+            return (
+
+                assignmentVisualReadiness.questionId
+                    === questionId &&
+
+                assignmentVisualReadiness.status
+                    === "READY" &&
+
+                assignmentVisualReadiness.failedAssets
+                    === 0 &&
+
+                assignmentVisualReadiness.loadedAssets
+                    === assignmentVisualReadiness.totalAssets
+            );
+        }
+
+
+        function monitorAssignmentVisualAssets(
+            questionId,
+            generation,
+            images
+        ) {
+
+            if (
+                !isCurrentVisualGeneration(
+                    questionId,
+                    generation
+                )
+            ) {
+
+                return;
+            }
+
+            const assets = Array.from(
+                new Set(images)
+            );
+
+            if (
+                assets.some(
+                    image =>
+                        !(image instanceof HTMLImageElement)
+                )
+            ) {
+
+                throw new Error(
+                    "Geçersiz görsel öğesi."
+                );
+            }
+
+            const assetStates = new Map();
+
+            assets.forEach(image => {
+
+                assetStates.set(
+                    image,
+                    "LOADING"
+                );
+            });
+
+            assignmentVisualReadiness.totalAssets =
+                assets.length;
+
+
+            function refreshVisualReadiness() {
+
+                if (
+                    !isCurrentVisualGeneration(
+                        questionId,
+                        generation
+                    )
+                ) {
+
+                    return;
+                }
+
+                const states = Array.from(
+                    assetStates.values()
+                );
+
+                const loaded = states.filter(
+                    state => state === "LOADED"
+                ).length;
+
+                const failed = states.filter(
+                    state => state === "FAILED"
+                ).length;
+
+                assignmentVisualReadiness.loadedAssets =
+                    loaded;
+
+                assignmentVisualReadiness.failedAssets =
+                    failed;
+
+                if (failed > 0) {
+
+                    assignmentVisualReadiness.status =
+                        "FAILED";
+
+                } else if (loaded === assets.length) {
+
+                    assignmentVisualReadiness.status =
+                        "READY";
+
+                } else {
+
+                    assignmentVisualReadiness.status =
+                        "LOADING";
+                }
+
+                updateAssignmentControls();
+            }
+
+
+            function inspectImage(image) {
+
+                if (
+                    !isCurrentVisualGeneration(
+                        questionId,
+                        generation
+                    )
+                ) {
+
+                    return;
+                }
+
+                if (!image.complete) {
+
+                    assetStates.set(
+                        image,
+                        "LOADING"
+                    );
+
+                } else if (
+                    image.naturalWidth > 0 &&
+                    image.naturalHeight > 0
+                ) {
+
+                    assetStates.set(
+                        image,
+                        "LOADED"
+                    );
+
+                } else {
+
+                    assetStates.set(
+                        image,
+                        "FAILED"
+                    );
+                }
+
+                refreshVisualReadiness();
+            }
+
+
+            assets.forEach(image => {
+
+                image.addEventListener(
+                    "load",
+                    () => inspectImage(image)
+                );
+
+                image.addEventListener(
+                    "error",
+                    () => inspectImage(image)
+                );
+
+                inspectImage(image);
+            });
+
+            refreshVisualReadiness();
+        }
+
+
+        function hasAssignmentVisualFailure(
+            questionId
+        ) {
+
+            return (
+
+                assignmentVisualReadiness.questionId
+                    === questionId &&
+
+                assignmentVisualReadiness.status
+                    === "FAILED"
+            );
+        }
+
+
+
+        let renderedAssignmentQuestionId = null;
+
+
+        function renderCurrentAssignmentQuestion() {
+
+            const controller =
+                studentExecutionController;
+
+            const question =
+                controller?.currentQuestion;
+
+            if (!question) {
+
+                throw new Error(
+                    "Geçerli etkinlik sorusu bulunamadı."
+                );
+            }
+
+            if (
+                renderedAssignmentQuestionId
+                === question.question_id
+            ) {
+
+                return false;
+            }
+
+            renderedAssignmentQuestionId = null;
+
+            const visualGeneration =
+                resetAssignmentVisualReadiness(
+                    question.question_id
+                );
+
+            cards.replaceChildren();
+
+            feedback.textContent = "";
+
+            const activityType =
+                question.presentation.activity_type;
+
+            switch (activityType) {
+
+                case "find_digit":
+
+                    renderAssignmentDigitQuestion(
+                        question
+                    );
+
+                    break;
+
+                case "number_to_quantity":
+
+                case "quantity_to_number":
+
+                    renderAssignmentQuantityQuestion(
+                        question
+                    );
+
+                    break;
+
+                default:
+
+                    throw new Error(
+                        "Bu etkinlik türü henüz desteklenmiyor."
+                    );
+            }
+
+            renderedAssignmentQuestionId =
+                question.question_id;
+
+            monitorAssignmentVisualAssets(
+
+                question.question_id,
+
+                visualGeneration,
+
+                cards.querySelectorAll("img")
+            );
+
+            return true;
+        }
+
+
+        function hasConfirmedRecordedResponse() {
+
+            const controller =
+                studentExecutionController;
+
+            const payload =
+                controller?.staleStoredResponse ||
+                controller?.pendingResponse;
+
+            const inspection =
+                latestResponseInspection;
+
+            return Boolean(
+
+                payload &&
+
+                inspection &&
+
+                inspection.recording_status
+                    === "RECORDED" &&
+
+                inspection.assignment_id
+                    === controller.assignmentId &&
+
+                inspection.request_id
+                    === payload.request_id &&
+
+                inspection.performance_session_id
+                    === payload.performance_session_id &&
+
+                inspection.question_id
+                    === payload.question_id &&
+
+                inspection.selected_position
+                    === payload.selected_position
+            );
+        }
+
+
+        function updateAssignmentRecoveryControls() {
+
+            const panel = document.getElementById(
+                "assignmentRecoveryPanel"
+            );
+
+            const message = document.getElementById(
+                "assignmentRecoveryMessage"
+            );
+
+            const button = document.getElementById(
+                "assignmentRecoveryButton"
+            );
+
+            if (!panel || !message || !button) {
+
+                return;
+            }
+
+            const controller =
+                studentExecutionController;
+
+            const recoveryRequired = Boolean(
+
+                controller && (
+
+                    controller.reconciliationRequired ||
+
+                    controller.hasPendingResponse ||
+
+                    controller.hasStaleStoredResponse ||
+
+                    controller.hasResponseConflict
+                )
+            );
+
+            panel.hidden = !recoveryRequired;
+
+            button.disabled = (
+
+                assignmentInteractionBusy ||
+
+                Boolean(controller?.busy)
+            );
+
+            if (!recoveryRequired) {
+
+                message.textContent = "";
+
+                return;
+            }
+
+            if (
+                controller.hasStaleStoredResponse ||
+                controller.hasResponseConflict
+            ) {
+
+                const payload =
+                    controller.staleStoredResponse ||
+                    controller.pendingResponse;
+
+                const inspection =
+                    latestResponseInspection;
+
+                if (
+                    inspection &&
+
+                    payload &&
+
+                    inspection.request_id
+                        === payload.request_id &&
+
+                    inspection.performance_session_id
+                        === payload.performance_session_id &&
+
+                    inspection.question_id
+                        === payload.question_id &&
+
+                    inspection.selected_position
+                        === payload.selected_position
+                ) {
+
+                    const messages = {
+
+                        RECORDED:
+                            "Cevabın kaydedildiği doğrulandı. " +
+                            "Etkinliğe devam edebilirsin.",
+
+                        NOT_RECORDED:
+                            "Cevap kaydı henüz bulunamadı. " +
+                            "Öğretmeninize bildiriniz.",
+
+                        CONFLICT:
+                            "Cevap kaydı doğrulanamadı. " +
+                            "Öğretmeninizin yardımı gerekiyor."
+                    };
+
+                    message.textContent =
+                        messages[inspection.recording_status];
+
+                } else {
+
+                    message.textContent =
+                        "Cevap kaydını kontrol etmemiz gerekiyor.";
+                }
+
+                button.textContent =
+                    hasConfirmedRecordedResponse()
+
+                        ? "Etkinliğe Devam Et"
+
+                        : "Cevap Kaydını Kontrol Et";
+
+                return;
+            }
+
+            if (controller.hasPendingResponse) {
+
+                message.textContent =
+                    "Cevabının kaydedildiğini kontrol edelim.";
+
+                button.textContent =
+                    "Cevabı Kontrol Et";
+
+            } else {
+
+                message.textContent =
+                    "Etkinliğe yeniden bağlanalım.";
+
+                button.textContent =
+                    "Tekrar Bağlan";
+            }
+        }
+
+
+        function updateAssignmentControls() {
+
+            updateAssignmentRecoveryControls();
+
+
+            const controller =
+                studentExecutionController;
+
+            const canAnswer = Boolean(
+
+                controller &&
+
+                !assignmentInteractionBusy &&
+
+                controller.canSubmitResponse &&
+
+                renderedAssignmentQuestionId !== null &&
+
+                renderedAssignmentQuestionId ===
+                    controller.currentQuestion?.question_id &&
+
+                areAssignmentVisualsReady(
+                    controller.currentQuestion.question_id
+                )
+            );
+
+            cards.querySelectorAll("button").forEach(
+                button => {
+
+                    button.disabled = !canAnswer;
+                }
+            );
+
+            listenButton.disabled = (
+                assignmentInteractionBusy ||
+                !controller?.currentQuestion ||
+                controller.reconciliationRequired ||
+                controller.hasPendingResponse ||
+                controller.hasStaleStoredResponse
+            );
+
+            if (controller?.canCompleteAssignment) {
+
+                nextButton.textContent = "Sonraki";
+
+                nextButton.disabled =
+                    assignmentInteractionBusy;
+
+                nextButton.onclick =
+                    completeCurrentAssignment;
+
+            } else if (controller?.canStartRepetition) {
+
+                nextButton.textContent = "Tekrar Deneyelim";
+
+                nextButton.disabled =
+                    assignmentInteractionBusy;
+
+                nextButton.onclick =
+                    repeatAssignmentQuestion;
+
+            } else {
+
+                nextButton.textContent = "Sonraki";
+
+                nextButton.disabled = true;
+
+                nextButton.onclick = null;
+            }
+        }
+
+
+        function showAssignmentFeedback(result) {
+
+            if (!result.feedback_applicable) {
+
+                feedback.textContent =
+                    "Etkinlik durumu güncellendi.";
+
+                return;
+            }
+
+            const feedbackType =
+                result.response.feedback.type;
+
+            const messages = {
+
+                SUCCESS:
+                    "Aferin! Doğru cevabı buldun!",
+
+                ENCOURAGEMENT:
+                    "Bir daha deneyelim. Haydi, tekrar bak!",
+
+                DISCOVERY:
+                    "Evet, doğru cevabı buldun! " +
+                    "Şimdi bir daha deneyelim. " +
+                    "Bakalım ilk seferde bulabilecek misin?"
+            };
+
+            feedback.textContent =
+                messages[feedbackType] || "";
+        }
+
+
+        function showSequenceCompletion() {
+
+            window.speechSynthesis?.cancel();
+
+            cards.replaceChildren();
+
+            feedback.textContent =
+                "Tebrikler! Bütün etkinliklerini tamamladın!";
+
+            listenButton.disabled = true;
+
+            nextButton.textContent = "Bitir";
+
+            nextButton.disabled = false;
+
+            nextButton.onclick = () => {
+
+                window.location.href = "/student";
+            };
+        }
+
+
+        async function completeCurrentAssignment() {
+
+            const controller =
+                studentExecutionController;
+
+            if (
+                assignmentInteractionBusy ||
+                !controller?.canCompleteAssignment
+            ) {
+                return;
+            }
+
+            assignmentInteractionBusy = true;
+
+            updateAssignmentControls();
+
+            try {
+
+                await controller.completeAssignment();
+
+                const result = await controller.apiRequest(
+                    "/api/student-sequence/next",
+                    "POST",
+                    {
+                        assignment_id:
+                            controller.assignmentId,
+
+                        performance_session_id:
+                            controller.performanceSessionId
+                    }
+                );
+
+                if (
+                    result.sequence_status === "ACTIVE" &&
+                    result.assignment?.assignment_id
+                ) {
+
+                    window.location.href =
+                        "/student/assignment/" +
+                        encodeURIComponent(
+                            result.assignment.assignment_id
+                        );
+
+                } else if (
+                    result.sequence_status ===
+                        "SEQUENCE_COMPLETED"
+                ) {
+
+                    showSequenceCompletion();
+
+                } else {
+
+                    throw new Error(
+                        "Sonraki etkinlik belirlenemedi."
+                    );
+                }
+
+            } catch (error) {
+
+                feedback.textContent = error.message;
+
+                assignmentInteractionBusy = false;
+
+                updateAssignmentControls();
+            }
+        }
+
+
+        async function repeatAssignmentQuestion() {
+
+            const controller =
+                studentExecutionController;
+
+            if (
+                assignmentInteractionBusy ||
+                !controller?.canStartRepetition
+            ) {
+                return;
+            }
+
+            assignmentInteractionBusy = true;
+
+            updateAssignmentControls();
+
+            try {
+
+                await controller.startRepetition();
+
+                renderCurrentAssignmentQuestion();
+
+            } catch (error) {
+
+                feedback.textContent = error.message;
+
+            } finally {
+
+                assignmentInteractionBusy = false;
+
+                updateAssignmentControls();
+            }
+        }
+
+
+        async function submitAssignmentAnswer(
+            selectedPosition
+        ) {
+
+            const controller =
+                studentExecutionController;
+
+            if (
+                !assignmentExecutionMode ||
+
+                !controller ||
+
+                assignmentInteractionBusy ||
+
+                !controller.canSubmitResponse ||
+
+                !controller.currentQuestion ||
+
+                renderedAssignmentQuestionId
+                    !== controller.currentQuestion.question_id ||
+
+                !areAssignmentVisualsReady(
+                    controller.currentQuestion.question_id
+                )
+            ) {
+
+                return;
+            }
+
+            assignmentInteractionBusy = true;
+
+            feedback.textContent = "";
+
+            updateAssignmentControls();
+
+            try {
+
+                const result =
+                    await controller.submitResponse(
+                        selectedPosition
+                    );
+
+                renderCurrentAssignmentQuestion();
+
+                showAssignmentFeedback(result);
+
+            } catch (error) {
+
+                feedback.textContent =
+                    error.message;
+
+            } finally {
+
+                assignmentInteractionBusy = false;
+
+                updateAssignmentControls();
+            }
+        }
+
+
+        async function reconcileAssignmentExecution() {
+
+            const controller =
+                studentExecutionController;
+
+            // Historical responses may be inspected.
+            // Cross-session response submission remains prohibited.
+
+            if (
+                !assignmentExecutionMode ||
+
+                !controller ||
+
+                assignmentInteractionBusy
+            ) {
+
+                return;
+            }
+
+            assignmentInteractionBusy = true;
+
+            updateAssignmentControls();
+
+            try {
+
+                if (
+                    controller.hasStaleStoredResponse ||
+                    controller.hasResponseConflict
+                ) {
+
+                    if (hasConfirmedRecordedResponse()) {
+
+                        latestResponseInspection = null;
+
+                        await controller.resolveRecordedResponse();
+
+                        renderCurrentAssignmentQuestion();
+
+                        feedback.textContent =
+                            "Etkinliğe devam edebilirsin.";
+
+                    } else {
+
+                        latestResponseInspection = null;
+
+                        latestResponseInspection =
+                            await controller.inspectPendingResponse();
+                    }
+
+                } else if (controller.hasPendingResponse) {
+
+                    const result =
+                        await controller.retryPendingResponse();
+
+                    renderCurrentAssignmentQuestion();
+
+                showAssignmentFeedback(result);
+
+                } else {
+
+                    await controller.loadExecution();
+
+                    renderCurrentAssignmentQuestion();
+
+                    feedback.textContent =
+                        "Etkinlik durumu güncellendi.";
+                }
+
+            } catch (error) {
+
+                feedback.textContent =
+                    error.message;
+
+            } finally {
+
+                assignmentInteractionBusy = false;
+
+                updateAssignmentControls();
+            }
+        }
+
+
+        async function initializeAssignmentExecution() {
+
+            cards.replaceChildren();
+
+            instruction.textContent =
+                "Etkinlik yükleniyor...";
+
+            feedback.textContent = "";
+
+            listenButton.disabled = true;
+
+            nextButton.disabled = true;
+
+            document.getElementById(
+                "tracing-panel"
+            ).hidden = true;
+
+            document.getElementById(
+                "quantity-question"
+            ).hidden = true;
+
+            try {
+
+                studentExecutionController =
+                    new window.StudentExecutionController(
+                        learningAssignmentId
+                    );
+
+                await studentExecutionController.loadExecution();
+
+                renderCurrentAssignmentQuestion();
+
+                updateAssignmentControls();
+
+            } catch (error) {
+
+                instruction.textContent =
+                    "Etkinlik yüklenemedi.";
+
+                feedback.textContent = error.message;
+
+                updateAssignmentControls();
+            }
+        }
+
+
+        if (assignmentExecutionMode) {
+
+            initializeAssignmentExecution();
+
+        } else if (learningMode || teacherPreviewMode) {
+
             startTeacherPreview();
+
         } else {
+
             createQuestion();
         }
     </script>
 
 
-{% if learning_mode | default(false) %}
+
+{% if assignment_execution_mode | default(false) %}
+
+<div style="text-align:center; margin:24px auto;">
+    <button
+        id="endAssignmentSessionButton"
+        type="button"
+        onclick="endAssignmentSession()"
+        style="padding:14px 28px; background:white;
+               color:#b91c1c; border:2px solid #b91c1c;
+               border-radius:12px; font-size:18px;
+               font-weight:bold; cursor:pointer;">
+        Oturumu Sonlandır
+    </button>
+
+    <p id="endAssignmentSessionMessage"
+       role="status"
+       aria-live="polite"></p>
+</div>
+
+<script>
+    async function endAssignmentSession() {
+
+        const controller = studentExecutionController;
+
+        const button = document.getElementById(
+            "endAssignmentSessionButton"
+        );
+
+        const message = document.getElementById(
+            "endAssignmentSessionMessage"
+        );
+
+        if (
+            !controller ||
+            !controller.performanceSessionId ||
+            controller.busy ||
+            assignmentInteractionBusy
+        ) {
+            return;
+        }
+
+        if (!window.confirm(
+            "Öğrenme oturumunu sonlandırmak istiyor musun?"
+        )) {
+            return;
+        }
+
+        assignmentInteractionBusy = true;
+        button.disabled = true;
+        message.textContent = "";
+
+        updateAssignmentControls();
+
+        try {
+
+            const sequence = await controller.apiRequest(
+                "/api/student-sequence"
+            );
+
+            if (
+                sequence.assignment?.assignment_id
+                    !== controller.assignmentId
+            ) {
+                throw new Error(
+                    "Öğrenme oturumu değişmiş."
+                );
+            }
+
+            await controller.apiRequest(
+                "/api/student-sequence",
+                "DELETE",
+                {
+                    student_id: sequence.student.id,
+                    assignment_id: controller.assignmentId,
+                    performance_session_id:
+                        controller.performanceSessionId
+                }
+            );
+
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            window.location.replace("/student");
+
+        } catch (error) {
+
+            message.textContent = error.message;
+
+            assignmentInteractionBusy = false;
+            button.disabled = false;
+
+            updateAssignmentControls();
+        }
+    }
+</script>
+
+{% endif %}
+
+{% if (learning_mode | default(false)) and not (assignment_execution_mode | default(false)) %}
 
 <div style="text-align:center; margin:24px auto;">
     <button

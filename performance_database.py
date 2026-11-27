@@ -253,11 +253,14 @@ def initialize_database():
 
             existing_version = int(version_record["value"])
 
-            if existing_version != SCHEMA_VERSION:
+            if (
+                existing_version < 1
+                or existing_version > SCHEMA_VERSION
+            ):
                 raise RuntimeError(
                     f"Unsupported performance database schema: "
                     f"{existing_version}. "
-                    f"Expected: {SCHEMA_VERSION}."
+                    f"Maximum supported: {SCHEMA_VERSION}."
                 )
 
         for statement in SCHEMA_STATEMENTS[1:]:
@@ -270,7 +273,19 @@ def initialize_database():
                 INSERT INTO schema_metadata (key, value)
                 VALUES ('schema_version', ?)
                 """,
-                (str(SCHEMA_VERSION),)
+                ("1",)
+            )
+
+            existing_version = 1
+
+        if existing_version < SCHEMA_VERSION:
+
+            from database_migrations import migrate_database
+
+            migrate_database(
+                connection,
+                current_version=existing_version,
+                target_version=SCHEMA_VERSION
             )
 
         connection.commit()
