@@ -4,10 +4,29 @@ from pathlib import Path
 
 from profile_api import profile_api
 from active_student_api import active_student_api
-from learning_session_api import learning_session_api
+from learning_session_api import (
+    learning_session_api,
+    interrupt_learning_session
+)
+
+import sqlite3
+
+from performance_database import (
+    initialize_database,
+    ensure_active_assignment_uniqueness
+)
+from performance_models import SessionStatus
+
+from performance_lifecycle import (
+    PERFORMANCE_SESSION_KEY,
+    get_bound_performance_session
+)
 from assignment_api import assignment_api
 
 app = Flask(__name__)
+
+initialize_database()
+ensure_active_assignment_uniqueness()
 
 # Oturum anahtarını kaynak kodundan ayrı tut.
 key_file = Path(__file__).resolve().parent / ".flask_secret_key"
@@ -124,6 +143,23 @@ def get_assigned_learning_activity(activity_id):
     if assignment.get("activity_id") != activity_id:
         return None
 
+    performance_record = get_bound_performance_session(
+        performance_session_id=session.get(
+            PERFORMANCE_SESSION_KEY
+        ),
+        student_id=student_id,
+        assignment_id=assignment_id
+    )
+
+    if performance_record is None:
+        return None
+
+    if performance_record["status"] != SessionStatus.ACTIVE.value:
+        return None
+
+    if performance_record["activity_id"] != activity_id:
+        return None
+
     activity = get_activity(activity_id)
 
     if not activity:
@@ -140,6 +176,11 @@ def get_assigned_learning_activity(activity_id):
     except (ValueError, TypeError, KeyError):
         return None
 
+    snapshot = performance_record["activity_snapshot"]
+
+    if snapshot.get("configuration") != activity.get("config"):
+        return None
+
     return activity
 
 
@@ -147,13 +188,54 @@ def get_assigned_learning_activity(activity_id):
 def student_assigned_activity(activity_id):
     from flask import redirect, url_for, make_response, session
 
-    activity = get_assigned_learning_activity(activity_id)
+    from assignment_storage import get_assignment
 
-    if activity is None:
-        session.pop("learning_student_id", None)
-        session.pop("learning_assignment_id", None)
+    try:
 
-        return redirect(url_for("student"))
+        current_student = session.get("learning_student_id")
+
+        assignment = (
+            get_assignment(current_student)
+            if current_student else None
+        )
+
+        # An old browser tab must not terminate a newer
+        # valid learning session merely by opening an old URL.
+        if (
+            assignment
+            and assignment.get("id") ==
+                session.get("learning_assignment_id")
+            and assignment.get("activity_id") != activity_id
+        ):
+            return redirect(url_for("student"))
+
+        activity = get_assigned_learning_activity(activity_id)
+
+        if activity is None:
+
+            interrupt_learning_session(
+                "ASSIGNED_ACTIVITY_UNAVAILABLE_OR_INVALID"
+            )
+
+            return redirect(url_for("student"))
+
+    except sqlite3.Error:
+
+        app.logger.exception(
+            "Performance session verification failed."
+        )
+
+        response = make_response(
+            "Öğrenme kaydı işlenemedi. "
+            "Lütfen tekrar deneyiniz.",
+            503
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, max-age=0"
+        )
+
+        return response
 
     response = make_response(
         render_template(
@@ -173,7 +255,29 @@ def student_assigned_activity(activity_id):
 def learning_activity_api(activity_id):
     from flask import jsonify, make_response
 
-    activity = get_assigned_learning_activity(activity_id)
+    try:
+
+        activity = get_assigned_learning_activity(activity_id)
+
+    except sqlite3.Error:
+
+        app.logger.exception(
+            "Performance session verification failed."
+        )
+
+        response = make_response(
+            jsonify(
+                ok=False,
+                error="Öğrenme kaydı işlenemedi."
+            ),
+            503
+        )
+
+        response.headers["Cache-Control"] = (
+            "no-store, max-age=0"
+        )
+
+        return response
 
     if activity is None:
         response = make_response(
