@@ -722,6 +722,13 @@ authentication or authorization.
 
 ## DD-032 — Single Active Activity Assignment
 
+**Status update — 2026-11-27:** The single-assignment
+restriction remains part of the Step 44 implementation,
+but is superseded as a future architectural requirement
+by DD-036. Multiple-assignment support is planned for
+Step 46.
+
+
 Date: 2026-11-25
 
 Status: Implemented
@@ -789,3 +796,250 @@ before project completion.
 
 Blocking failures and essential integrity controls
 must still be addressed during development.
+
+
+---
+
+## DD-035 — Persistent Assignment-Bound Performance Sessions
+
+Status: Implemented in Step 45.3.
+
+An assignment may have multiple historical learning
+sessions, but at most one active learning session.
+
+Performance records are stored in SQLite. Existing
+student profiles, activities, assignments and visual
+material storage remain unchanged.
+
+Session creation and lifecycle events are transactional.
+Repeated compatible session creation requests reuse
+the existing active session.
+
+Historical performance records survive assignment
+removal and session termination.
+
+The normal session lifecycle has been verified.
+Comprehensive verification remains outstanding.
+
+---
+
+# Design Decisions Following Teacher Consultation
+
+Date: 2026-11-27
+
+The following decisions define the planned development
+direction following consultation with a special
+education teacher.
+
+They are not claims of implemented functionality.
+
+## DD-036 — Multiple Enabled Assignments
+
+A teacher may enable multiple approved activities
+for an individual student.
+
+This supersedes the single-assignment restriction
+defined in DD-032.
+
+Only one assignment is executed at a time within
+the student's learning sequence.
+
+## DD-037 — Teacher-Controlled Assignment Sequence
+
+The teacher determines the order in which enabled
+assignments are presented to the student.
+
+## DD-038 — Sequential Student Progression
+
+The student advances to the next assigned activity
+using the Sonraki button without returning to the
+student dashboard.
+
+## DD-039 — Successful Completion Before Advancement
+
+The student cannot advance to the next assignment
+until the current activity satisfies its instructional
+completion criteria.
+
+Exhausting answer alternatives alone does not
+constitute successful completion.
+
+The teacher may interrupt or terminate an activity
+without recording successful completion.
+
+## DD-040 — Reusable Feedback Library
+
+Animated feedback characters and associated audio
+and text shall be implemented as reusable components.
+
+## DD-041 — Student-Specific Feedback
+
+Feedback shall be configurable according to individual
+student characteristics, preferences and sensory needs.
+
+## DD-042 — Encouraging Incorrect-Answer Feedback
+
+Incorrect-answer feedback shall be supportive,
+non-punitive and encouraging.
+
+Humor shall not ridicule or embarrass the student.
+
+## DD-043 — Independent Feedback Modalities
+
+Animation, written feedback, spoken feedback and
+additional sound effects shall be independently
+configurable.
+
+## DD-044 — Feedback Performance Events
+
+Feedback and reinforcement presentations shall be
+recorded as performance events.
+
+Presentation of a stimulus does not establish that
+the student attended to it or that it functioned
+as an effective reinforcer.
+
+## DD-045 — Discovery Through Trial and Error
+
+The student shall be permitted to discover the correct
+answer by trying all available alternatives.
+
+The system shall acknowledge discovery of the correct
+answer rather than interrupting the exercise before
+the correct answer is selected.
+
+## DD-046 — Repetition Following Discovery
+
+When the student discovers the correct answer after
+trying all alternatives, the system shall acknowledge
+the discovery and repeat the same exercise.
+
+The learning target remains unchanged.
+
+The answer alternatives shall be reordered.
+
+## DD-047 — Preservation of Attempts and Rounds
+
+All student responses, exercise rounds and restarts
+shall be preserved in the performance history.
+
+Restarting an exercise shall not erase earlier
+incorrect or correct responses.
+
+## DD-048 — Completion Is Not Mastery
+
+Successful activity completion shall not automatically
+be interpreted as mastery of an educational achievement.
+
+Initial first-attempt correctness, subsequent
+correctness and correctness following repetition
+shall be distinguished.
+
+## DD-049 — Three Feedback Categories
+
+The system shall support three feedback categories:
+
+A. Successful completion:
+   Celebrating star.
+
+   Aferin! Doğru cevabı buldun!
+
+B. Incorrect answer:
+   Encouraging turtle.
+
+   Bir daha deneyelim. Haydi, tekrar bak!
+
+C. Discovery followed by repetition:
+   Thinking robot.
+
+   Evet, doğru cevabı buldun! Şimdi bir daha
+   deneyelim. Bakalım ilk seferde bulabilecek misin?
+
+## DD-050 — First-Attempt Success Following Discovery
+
+Following discovery through elimination, the student
+must answer correctly on the first attempt of a
+subsequent round before advancement is permitted.
+
+If a subsequent round includes an incorrect response,
+another round is required after the correct answer
+is discovered.
+
+This rule shall be implemented through a reusable
+activity execution mechanism.
+
+## DD-051 — Animated Feedback Characters
+
+Feedback characters shall perform actual movements.
+
+Initial characters:
+
+- Star: gentle jumping and celebration.
+- Turtle: head movement, scratching its head and nodding.
+- Robot: thoughtful head movement, illuminated light
+  bulb and discovery gesture.
+
+Animated SVG with CSS or JavaScript is the preferred
+initial implementation approach.
+
+## DD-052 — Written and Spoken Turkish Feedback
+
+Feedback messages shall be displayed as written text
+and read aloud in Turkish by default.
+
+## DD-053 — Synchronized Multimodal Feedback
+
+Animation, displayed text and spoken feedback shall
+be coordinated as a single feedback presentation.
+
+## DD-054 — Persistent Written Feedback
+
+Written feedback shall remain visible after animation
+and speech completion until the next relevant
+interaction or exercise transition.
+
+## DD-055 — Teacher-Customizable Feedback Messages
+
+The teacher shall be able to customize the written
+and spoken feedback messages.
+
+## DD-056 — Configurable Feedback Presentation
+
+The teacher shall be able to configure:
+
+- Animation enabled or disabled.
+- Written feedback enabled or disabled.
+- Spoken feedback enabled or disabled.
+- Additional sound effects enabled or disabled.
+- Animation speed and duration.
+- Speaking speed and volume.
+
+Student-level defaults and activity-specific
+overrides shall be supported.
+
+## DD-057 — Sensory Suitability and Teacher Approval
+
+Feedback shall avoid excessive, sudden or potentially
+distressing sensory stimulation.
+
+Feedback configurations shall undergo automatic
+verification against known student-specific constraints.
+
+Uncertain verification results shall be explicitly
+reported to the teacher.
+
+The teacher retains final approval authority.
+
+## DD-058 — Uninterrupted Feedback Presentation
+
+Normal exercise progression shall not interrupt
+the feedback message.
+
+The Sonraki button shall become available only after
+successful completion and the required feedback
+presentation.
+
+Speech or animation failures must not permanently
+block progression.
+
+Teacher interruption remains available.

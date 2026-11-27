@@ -601,3 +601,466 @@ The invalid assignment remains available for teacher review.
 
 Production authentication, comprehensive concurrency
 verification and performance recording remain outstanding.
+
+
+---
+
+## Step 45.3 — Persistent Performance Architecture
+
+Status: Implemented.
+Date: 2026-11-27.
+
+### Architectural Separation
+
+The performance subsystem separates three levels:
+
+1. Raw observations and performance events.
+2. Derived performance indicators and progress analysis.
+3. Educational interpretation and recommendations.
+
+Step 45.3 establishes the persistence infrastructure
+for the first level.
+
+Detailed response recording, derived indicators and
+educational interpretation remain future work.
+
+The teacher retains final educational decision authority.
+
+### Implemented Components
+
+| Component | Responsibility |
+|---|---|
+| performance_database.py | SQLite schema, connections and transactions |
+| performance_models.py | Session and event data models |
+| performance_storage.py | Transactional persistence and retrieval |
+| performance_event_validation.py | Event payload validation |
+| performance_lifecycle.py | Assignment-bound performance lifecycle |
+| learning_session_api.py | Browser learning session integration |
+| app.py | Database initialization and execution authorization |
+
+### Persistence Architecture
+
+Existing JSON-based storage remains unchanged.
+
+- Student profiles: JSON.
+- Activity configurations: JSON.
+- Current assignments: JSON.
+- Visual material library: existing storage.
+- Performance sessions and events: SQLite.
+
+The performance database is stored at:
+
+    data/performance.db
+
+Runtime data remains excluded from GitHub.
+
+SQLite uses foreign key enforcement, WAL mode,
+transactional writes and a schema version identifier.
+
+### Performance Data Model
+
+The principal database tables are:
+
+- schema_metadata
+- learning_sessions
+- performance_events
+
+A learning session identifies:
+
+- Student.
+- Assignment.
+- Activity.
+- Achievement, when available.
+- Learning mode.
+- Activity configuration snapshot.
+- Start and end timestamps.
+- Session status.
+- Termination reason.
+
+Performance events identify:
+
+- Event.
+- Learning session.
+- Question, when applicable.
+- Attempt, when applicable.
+- Event sequence number.
+- Event type.
+- Occurrence timestamp.
+- Recording timestamp.
+- Event source.
+- Structured payload.
+- Event schema version.
+
+Performance events are append-only through the
+application storage interface.
+
+Database-level enforcement of event immutability
+has not yet been implemented.
+
+### Learning Modes
+
+The data model supports:
+
+- COMPUTER_BASED
+- TEACHER_ASSISTED
+- TEACHER_LED
+
+The currently integrated execution workflow uses
+COMPUTER_BASED mode.
+
+Teacher-assisted and teacher-led observation
+interfaces remain future work.
+
+### Session Lifecycle
+
+Supported session states:
+
+- ACTIVE
+- COMPLETED
+- TERMINATED
+- INTERRUPTED
+
+An assignment may have multiple historical learning
+sessions but at most one active learning session.
+
+This invariant is enforced using a partial unique
+SQLite index.
+
+Compatible repeated session creation requests reuse
+the existing active session.
+
+Session creation and its SESSION_STARTED event
+are recorded transactionally.
+
+Session finalization and its SESSION_ENDED event
+are recorded transactionally.
+
+Historical performance records are retained after
+assignment removal.
+
+### Event Architecture
+
+The event model supports:
+
+- SESSION_STARTED
+- SESSION_ENDED
+- QUESTION_PRESENTED
+- QUESTION_COMPLETED
+- INSTRUCTION_DELIVERED
+- INSTRUCTION_REPEATED
+- RESPONSE_SUBMITTED
+- PROMPT_DELIVERED
+- ASSISTANCE_PROVIDED
+- FEEDBACK_DELIVERED
+- REINFORCEMENT_DELIVERED
+- TEACHER_OBSERVATION_RECORDED
+
+At this milestone, session lifecycle events are
+integrated into actual student execution.
+
+Detailed question, response and feedback recording
+is not yet integrated into the student interface.
+
+### Observation and Interpretation Boundaries
+
+Every response attempt must eventually be preserved.
+
+Unknown assistance must not be interpreted as
+independent performance.
+
+Correctness, completion and mastery are distinct
+educational concepts.
+
+Teacher previews must not generate actual student
+performance records.
+
+Presentation of feedback does not prove student
+attention or reinforcement effectiveness.
+
+### Current Architectural Limitations
+
+- JSON assignment storage and SQLite performance
+  storage do not share a single atomic transaction.
+- Exclusive browser ownership of a learning session
+  is not yet enforced.
+- Production authentication and authorization
+  remain outstanding.
+- Browser closure is not automatically interpreted
+  as session interruption.
+- Comprehensive concurrency, recovery and regression
+  verification remains outstanding.
+
+---
+
+## Step 46 — Teacher-Controlled Multiple Assignment Architecture
+
+Status: Planned.
+Source: Teacher consultation, 2026-11-27.
+
+### Motivation
+
+The teacher requires the ability to enable several
+approved activities for a student in advance.
+
+The student should complete these activities
+sequentially without returning to the dashboard
+between activities.
+
+This requirement supersedes the single-assignment
+restriction of Step 44 and DD-032.
+
+The existing Step 44 implementation remains
+unchanged until Step 46 is implemented.
+
+### Proposed Logical Architecture
+
+    Student
+        |
+        +-- Ordered learning sequence
+                |
+                +-- Assignment 1
+                |       +-- Learning sessions
+                |               +-- Performance events
+                |
+                +-- Assignment 2
+                |       +-- Learning sessions
+                |               +-- Performance events
+                |
+                +-- Assignment N
+                        +-- Learning sessions
+                                +-- Performance events
+
+The learning sequence is a proposed logical
+abstraction. Its physical persistence model
+will be determined during Step 46.1.
+
+### Teacher Responsibilities
+
+The teacher shall be able to:
+
+- Select approved student activities.
+- Enable and disable individual assignments.
+- Determine their execution order.
+- Add activities to the learning sequence.
+- Review assignment completion status.
+- Assign previously completed activities again.
+
+Assignment management must not modify or delete
+the original approved activity configuration.
+
+### Student Execution
+
+Only one assignment shall be executed at a time
+within a student's learning sequence.
+
+The student shall advance using Sonraki after
+successful completion of the current activity.
+
+The last activity shall provide an appropriate
+learning sequence completion interface.
+
+The student shall not independently bypass
+an unfinished assignment.
+
+Teacher interruption remains available and
+must not be interpreted as successful completion.
+
+### Shared Exercise Execution Mechanism
+
+The progression mechanism shall be reusable across
+multiple-choice activity types.
+
+The initial implementation shall support:
+
+- Digit recognition.
+- Number-to-quantity representation.
+- Quantity-to-number representation.
+
+Future compatible activities should reuse the
+same execution mechanism.
+
+### Exercise Rounds and Discovery
+
+An exercise may contain multiple rounds.
+
+Each round may contain multiple response attempts.
+
+The student may continue selecting alternatives
+until the correct answer is discovered.
+
+If the correct answer is discovered after trying
+all alternatives:
+
+1. Acknowledge discovery of the correct answer.
+2. Present encouraging discovery feedback.
+3. Preserve all previous attempts.
+4. Repeat the same learning target.
+5. Reorder the answer alternatives.
+6. Require first-attempt correctness in a
+   subsequent round before advancement.
+
+If a repetition round contains an incorrect
+response, successful discovery is acknowledged,
+but another round is required.
+
+The exact presentation and attempt history must
+be retained for subsequent performance analysis.
+
+### Completion and Performance Interpretation
+
+The architecture shall distinguish:
+
+- Initial first-attempt correctness.
+- Correctness after one or more incorrect attempts.
+- Correctness discovered through elimination.
+- First-attempt correctness following repetition.
+- Successful exercise completion.
+- Assignment completion.
+- Learning sequence completion.
+
+None of these observations alone establishes
+long-term educational mastery.
+
+---
+
+## Step 47 — Multimodal Feedback Architecture
+
+Status: Planned.
+Source: Teacher consultation, 2026-11-27.
+
+### Reusable Feedback Library
+
+Feedback shall be represented as reusable components,
+independent of individual activity implementations.
+
+The initial library shall contain three categories.
+
+| Category | Character | Purpose |
+|---|---|---|
+| A | Celebrating star | Successful completion |
+| B | Encouraging turtle | Incorrect response |
+| C | Thinking robot | Discovery followed by repetition |
+
+### Initial Character Behavior
+
+Celebrating star:
+
+- Gentle jumping.
+- Raised arms.
+- Smiling celebration.
+
+Encouraging turtle:
+
+- Gentle head movement.
+- Scratching its head.
+- Encouraging smile and nod.
+
+Thinking robot:
+
+- Thoughtful head movement.
+- Illuminated light bulb.
+- Discovery gesture.
+- Encouraging smile.
+
+### Feedback Presentation Components
+
+Each feedback presentation may contain:
+
+- Animated character.
+- Written Turkish message.
+- Spoken Turkish message.
+- Optional additional sound effect.
+
+The preferred initial implementation is animated
+SVG using CSS or JavaScript, combined with the
+existing browser speech synthesis mechanism.
+
+The final implementation technology will be
+confirmed during Step 47.
+
+### Presentation Lifecycle
+
+    Response evaluation
+        |
+        +-- Select feedback category
+        |
+        +-- Apply student-specific configuration
+        |
+        +-- Display written feedback
+        |
+        +-- Start character animation
+        |
+        +-- Read message aloud
+        |
+        +-- Complete feedback presentation
+        |
+        +-- Continue, repeat or enable Sonraki
+
+Animation and speech shall be coordinated.
+
+Written feedback shall remain visible until
+the next relevant interaction or transition.
+
+Normal progression shall not interrupt the
+feedback presentation.
+
+Speech or animation failures must not permanently
+block activity progression.
+
+Teacher interruption must remain available.
+
+### Student-Specific Configuration
+
+The architecture shall support:
+
+- Student-level feedback defaults.
+- Activity-specific overrides.
+- Character selection.
+- Teacher-defined messages.
+- Animation enablement, speed and duration.
+- Written feedback enablement.
+- Spoken feedback enablement.
+- Speaking speed and volume.
+- Optional sound effects.
+
+Automatic verification shall evaluate known
+student-specific sensory constraints.
+
+Uncertain suitability shall be reported explicitly.
+
+Final approval remains with the teacher.
+
+### Performance Integration
+
+The actual feedback configuration and presentation
+events shall be recorded in the performance history.
+
+The system shall distinguish attempted presentation
+from confirmed application-level completion.
+
+It shall not infer that the student heard,
+understood or attended to the feedback solely
+from successful software execution.
+
+### Educational Method Coverage
+
+The multiple-assignment, repetition and feedback
+architecture provides reusable infrastructure
+for future teaching method implementations.
+
+These capabilities do not establish complete
+implementation of any MEB teaching method.
+
+The mandatory coverage baseline of all 35
+identified teaching methods remains unchanged.
+
+---
+
+## Current Development Continuation
+
+1. Complete Step 45.3 documentation and checkpoint.
+2. Implement Step 46 multiple-assignment execution.
+3. Implement Step 47 multimodal feedback.
+4. Resume Step 45.4 detailed performance recording.
+5. Develop performance history and progress analysis.
+6. Conduct comprehensive deferred verification.

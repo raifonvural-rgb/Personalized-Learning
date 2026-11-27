@@ -609,3 +609,238 @@ be interpreted as achievement mastery.
 
 Comprehensive regression and integration testing
 will be consolidated toward project completion.
+
+
+---
+
+## Roadmap Revision — Teacher Consultation 2026-11-27
+
+This revision supersedes the earlier immediate
+development sequence.
+
+Existing long-term objectives remain unchanged.
+
+### Step 45 — Student Performance Recording
+
+Completed:
+
+- 45.1: Performance recording requirements.
+- 45.2: Performance data model.
+- 45.3: Persistent performance infrastructure.
+
+Step 45.3 includes SQLite persistence, transactional
+session lifecycle management, activity snapshots,
+event validation and historical record retrieval.
+
+The normal session lifecycle has been verified.
+
+Detailed performance recording is temporarily
+deferred until Steps 46 and 47 are implemented.
+
+### Step 46 — Teacher-Controlled Multiple Assignments
+
+Status: Next implementation milestone.
+
+Objective:
+
+Allow teachers to prepare ordered sequences of
+approved activities for individual students.
+
+| Step | Development task |
+|---|---|
+| 46.1 | Multiple-assignment data model and persistence |
+| 46.2 | Assignment lifecycle and storage operations |
+| 46.3 | Teacher-facing assignment management API |
+| 46.4 | Teacher interface for enabling and ordering activities |
+| 46.5 | Student learning sequence initialization |
+| 46.6 | Shared exercise execution mechanism |
+| 46.7 | Discovery through trial and error |
+| 46.8 | Exercise repetition and alternative reordering |
+| 46.9 | Successful completion and Sonraki transition |
+| 46.10 | Learning sequence completion |
+| 46.11 | Essential integration verification |
+| 46.12 | Documentation and GitHub checkpoint |
+
+#### Mandatory Requirements
+
+- Multiple enabled assignments per student.
+- Teacher-controlled execution order.
+- Only one assignment executed at a time.
+- Approved activities only.
+- Successful completion before advancement.
+- No automatic advancement based solely on attempt count.
+- Positive acknowledgment of correct-answer discovery.
+- Repetition after discovery through elimination.
+- Reordered alternatives during repetition.
+- First-attempt correctness following discovery
+  through elimination.
+- Preservation of previous attempts and rounds.
+- Teacher-controlled interruption and termination.
+- Preservation of historical performance records.
+
+#### Architectural Questions to Resolve
+
+- Physical assignment persistence model.
+- Migration of existing single assignments.
+- Assignment lifecycle states.
+- Ordering and enablement semantics.
+- Changes to a sequence during active execution.
+- Recovery after browser refresh or interruption.
+- Protection against unauthorized or premature advancement.
+- Integration with persistent performance sessions.
+
+These questions must be resolved before their
+corresponding implementation steps.
+
+### Step 47 — Animated Multimodal Feedback
+
+Status: Planned after Step 46.
+
+Objective:
+
+Provide reusable, personalized animated feedback
+with written and spoken Turkish messages.
+
+| Step | Development task |
+|---|---|
+| 47.1 | Feedback library architecture and asset model |
+| 47.2 | Celebrating star animation |
+| 47.3 | Encouraging turtle animation |
+| 47.4 | Thinking robot animation |
+| 47.5 | Written feedback presentation |
+| 47.6 | Turkish speech synthesis integration |
+| 47.7 | Animation, text and speech synchronization |
+| 47.8 | Student-specific feedback configuration |
+| 47.9 | Teacher message customization |
+| 47.10 | Teacher preview and approval |
+| 47.11 | Student-specific sensory suitability verification |
+| 47.12 | Shared activity execution integration |
+| 47.13 | Essential integration verification |
+| 47.14 | Documentation and GitHub checkpoint |
+
+#### Initial Feedback Categories
+
+Category A — Successful completion:
+
+Character: Celebrating star.
+
+Message:
+
+Aferin! Doğru cevabı buldun!
+
+Category B — Incorrect response:
+
+Character: Encouraging turtle.
+
+Message:
+
+Bir daha deneyelim. Haydi, tekrar bak!
+
+Category C — Discovery followed by repetition:
+
+Character: Thinking robot.
+
+Message:
+
+Evet, doğru cevabı buldun! Şimdi bir daha
+deneyelim. Bakalım ilk seferde bulabilecek misin?
+
+#### Mandatory Requirements
+
+- Actual character movement.
+- Written Turkish feedback.
+- Spoken Turkish feedback.
+- Coordinated animation, text and speech.
+- Independently configurable feedback modalities.
+- Teacher-customizable messages.
+- Student-specific defaults.
+- Activity-specific overrides.
+- Adjustable animation speed and duration.
+- Adjustable speech speed and volume.
+- Optional additional sound effects.
+- Sensory suitability verification.
+- Explicit reporting of uncertain suitability.
+- Final teacher approval.
+- Graceful recovery from animation or speech failures.
+- No interruption of feedback by normal progression.
+
+The initial preferred technology is animated SVG
+with CSS or JavaScript and browser speech synthesis.
+
+The final technical implementation remains subject
+to evaluation during Step 47.
+
+### Resume Step 45 — Detailed Performance Recording
+
+Following Steps 46 and 47:
+
+| Step | Development task |
+|---|---|
+| 45.4 | Automatic question, round and response recording |
+| 45.5 | Student performance history |
+| 45.6 | Teacher performance dashboard |
+| 45.7 | Derived progress indicators and analysis |
+| 45.8 | Teacher observations |
+| 45.9 | Teacher-controlled educational recommendations |
+| 45.10 | Documentation and GitHub checkpoint |
+
+#### Required Performance Observations
+
+- Actual question presentations.
+- Actual answer alternatives and their order.
+- Exercise round identifiers.
+- Every response attempt.
+- Response correctness.
+- Initial first-attempt correctness.
+- Discovery through elimination.
+- Exercise restarts.
+- First-attempt correctness following repetition.
+- Response and exercise durations.
+- Instruction repetitions.
+- Prompting and assistance.
+- Feedback presentations.
+- Reinforcement presentations.
+- Exercise completion.
+- Assignment completion.
+- Learning sequence completion.
+- Session interruptions and terminations.
+
+Unknown assistance must not be classified as
+independent performance.
+
+Successful completion must not automatically be
+classified as educational mastery.
+
+### Comprehensive Verification
+
+The cumulative verification backlog shall be
+maintained in TEST_RESULTS.md.
+
+Essential integrity and blocking-failure checks
+shall continue during implementation.
+
+Comprehensive functional, integration, concurrency,
+persistence, recovery and regression verification
+shall be conducted before the prototype is
+considered ready for formal evaluation.
+
+### Mandatory MEB Teaching Method Coverage
+
+The coverage baseline of all 35 identified MEB
+mathematics teaching methods remains mandatory.
+
+The new capabilities contribute reusable
+infrastructure but do not establish complete
+implementation of individual teaching methods.
+
+Method-specific implementation and verification
+remain part of the long-term roadmap.
+
+### Current Development Priority
+
+1. Complete Step 45.3 documentation.
+2. Commit and push the checkpoint.
+3. Implement Step 46.
+4. Implement Step 47.
+5. Resume Step 45.4 and subsequent assessment work.
+6. Continue the remaining educational roadmap.
